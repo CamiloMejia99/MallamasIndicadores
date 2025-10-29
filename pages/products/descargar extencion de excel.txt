@@ -1,0 +1,87 @@
+
+Descarga composer.phar de https://getcomposer.org/download/ 
+y pégalo en la carpeta madre de Mallamascrud
+
+entra en C:\xampp\php\php.ini descomenta las líneas 
+
+extension=gd
+extension=zip
+
+Abre el cmd y ve a esta ruta: C:\xampp\htdocs\MallamasCrud>
+ahora pega esta linea y dale enter:
+C:\xampp\htdocs\MallamasCrud>C:\xampp\php\php.exe composer.phar require phpoffice/phpspreadsheet
+
+
+
+Descarga basica sin diseño
+
+
+
+<?php
+require '../../vendor/autoload.php'; // carga PhpSpreadsheet
+include '../../bd/conexion.php';    // tu conexión a la BD
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+
+// 1. Crear el objeto Spreadsheet
+$spreadsheet = new Spreadsheet();
+$sheet = $spreadsheet->getActiveSheet();
+
+// 2. Encabezados
+$sheet->setCellValue('A1', 'ID Indicador');
+$sheet->setCellValue('B1', 'Proceso');
+$sheet->setCellValue('C1', 'Coordinación');
+$sheet->setCellValue('D1', 'Código');
+$sheet->setCellValue('E1', 'Nombre Indicador');
+$sheet->setCellValue('F1', 'Objetivo');
+$sheet->setCellValue('G1', 'Periodicidad');
+$sheet->setCellValue('H1', 'Fuente Información');
+$sheet->setCellValue('I1', 'Meta');
+$sheet->setCellValue('J1', 'ID Resultado');
+$sheet->setCellValue('K1', 'Mes');
+$sheet->setCellValue('L1', 'Num');
+$sheet->setCellValue('M1', 'Dem');
+$sheet->setCellValue('N1', 'Resultado');
+
+// 3. Consultar la relación entre tablas
+$sql = "SELECT i.id_indicador, i.proceso, i.coordinacion, i.codigo, i.nombre_indicador, 
+               i.objetivo, i.periodicidad, i.fuente_informacion, i.meta,
+               r.id_result, r.mes, r.num, r.dem, r.resultado
+        FROM indicadores i
+        LEFT JOIN indicadores_resultado r ON i.id_indicador = r.id_idicador";
+
+$stmt = sqlsrv_query($conexion, $sql);
+
+if ($stmt === false) {
+    die(print_r(sqlsrv_errors(), true));
+}
+
+// 4. Pasar datos a Excel
+$row = 2; // empieza en la fila 2 (después de los encabezados)
+while ($data = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+    $sheet->setCellValue('A'.$row, $data['id_indicador']);
+    $sheet->setCellValue('B'.$row, $data['proceso']);
+    $sheet->setCellValue('C'.$row, $data['coordinacion']);
+    $sheet->setCellValue('D'.$row, $data['codigo']);
+    $sheet->setCellValue('E'.$row, $data['nombre_indicador']);
+    $sheet->setCellValue('F'.$row, $data['objetivo']);
+    $sheet->setCellValue('G'.$row, $data['periodicidad']);
+    $sheet->setCellValue('H'.$row, $data['fuente_informacion']);
+    $sheet->setCellValue('I'.$row, $data['meta']);
+    $sheet->setCellValue('J'.$row, $data['id_result']);
+    $sheet->setCellValue('K'.$row, $data['mes']);
+    $sheet->setCellValue('L'.$row, $data['num']);
+    $sheet->setCellValue('M'.$row, $data['dem']);
+    $sheet->setCellValue('N'.$row, $data['resultado']);
+    $row++;
+}
+
+// 5. Descargar el archivo Excel
+$writer = new Xlsx($spreadsheet);
+$filename = "indicadores_export.xlsx";
+
+header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+header("Content-Disposition: attachment; filename=\"$filename\"");
+$writer->save("php://output");
+exit;

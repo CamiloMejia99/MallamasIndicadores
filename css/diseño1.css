@@ -1,0 +1,57 @@
+h1 {
+  text-align: center;
+}
+
+#contenedorp{
+
+  border-radius: 5px;
+  /*text-align: center;*/
+  padding: 1em;
+
+}
+#contenedor2{
+
+
+  text-align: left;
+ 
+
+}
+
+h4{
+
+    color: black;
+    font-family: 'Tiro Devanagari Hindi', serif;
+    text-align: center;
+}
+h5{
+    font-family: 'Tiro Devanagari Hindi', serif;
+    text-align: center;
+}
+h6{
+
+    color: black;
+    font-family: 'Tiro Devanagari Hindi', serif;
+    text-align: center;
+}
+
+.clase_table {
+        border-collapse: separate;
+        border-spacing: 10;
+        border: 2px solid black;
+        border-radius: 10px;
+        -moz-border-radius: 20px;    
+}
+
+.divisor {
+            height: 3rem;
+            background-color: rgba(0, 0, 0, .1);
+            border: solid rgba(0, 0, 0, .15);
+            border-width: 1px 0;
+            box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
+          }
+#despor{
+    font-size: 5px;
+  color: white;
+  font-family: 'Tiro Devanagari Hindi', serif;
+  text-align: center;
+}

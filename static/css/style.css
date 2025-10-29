@@ -1,0 +1,226 @@
+
+#password-hint,
+#password-match-hint {
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+.valid {
+    color: green;
+    font-weight: bold;
+}
+.invalid {
+    color: red;
+    font-weight: bold;
+}
+.brand-link {
+    text-decoration: none; /* quita el subrayado */
+    color: white !important; /* fuerza el texto blanco */
+}
+
+.brand-link:hover {
+    color: #f0f0f0 !important; /* opcional: un gris claro al pasar el mouse */
+}
+.content-wrapper {
+
+    background-size: cover;       /* o "contain" si quieres la imagen completa */
+    background-repeat: no-repeat;
+    background-position: center;
+    height: 100vh;   /* alto del div, aquí toda la pantalla */
+    width: 100%;
+}
+
+.divisor {
+    height: 3rem;
+    background-color: rgba(0, 0, 0, .1);
+    border: solid rgba(0, 0, 0, .15);
+    border-width: 1px 0;
+    box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
+}
+
+.appWhatsapp {
+    position: fixed;
+    right: 26px;
+    bottom: 100px;
+    width: 140px;
+    z-index: 1000;
+}
+
+.appWhatsapp img {
+    width: 100%;
+    height: auto;
+}
+
+.botonContacto {
+    text-align: center;
+    bottom: 3px;
+    width: 3px;
+    z-index: 3;
+}
+
+.botonContacto img {
+    text-align: center;
+    width: 3%;
+    height: auto;
+}
+
+.titulom {
+    color: #027cff;
+    font-size: 60px;
+    font-family: 'Montserrat', sans-serif
+}
+
+.carrucelTit {
+    color: black;
+    font-size: 30px;
+    font-family: 'Montserrat', sans-serif
+}
+
+.carrucelP {
+    color: black;
+    font-size: 17px;
+    font-family: 'Montserrat', sans-serif
+}
+
+.card2 {
+    min-height: 500 px;
+    width: 700 px;
+}
+
+#txt2 {
+    color: rgb(0, 195, 255);
+    font-size: 100px;
+    font-family: 'Fuzzy Bubbles', cursive;
+    font-family: 'Source Serif Pro', serif;
+}
+
+#txt8 {
+    color: rgb(255, 255, 255);
+    font-size: 17px;
+}
+
+#contenedor4 {
+    background-color: #ffffff;
+    height: 33%;
+}
+
+#emailconta {
+    width: 250px;
+    height: 44px;
+    border-radius: 15px;
+}
+
+
+
+#txt4 {
+    font-size: 25px;
+    font-family: 'Montserrat', sans-serif
+}
+
+.textos {
+    color: black;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #1a1a1a;
+}
+
+.conten {
+    position: fixed;
+    top: 4em;
+    width: 100%;
+    text-align: center;
+}
+
+.conten__img {
+    width: 100%;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+
+.conten__img img {
+    width: 300px;
+    display: block;
+    -webkit-animation: animates 2s linear infinite alternate;
+    animation: animates 2s linear infinite alternate;
+}
+
+.conten__number {
+    position: absolute;
+    font-size: 5.5rem;
+    font-family: "Gill Sans", sans-serif;
+    font-weight: 600;
+    top: 9rem;
+    color: rgba(255, 255, 255, 0.5);
+    -webkit-animation: animatestext 2s linear infinite alternate;
+    animation: animatestext 2s linear infinite alternate;
+}
+
+.conten__error {
+    color: #ffffff;
+    width: 50%;
+    margin: 2em auto;
+    font-family: "Gill Sans", sans-serif;
+}
+
+.conten__button {
+    background-color: #0077d8f4;
+    color: #ffffff;
+    font-weight: 600;
+    font-family: "Gill Sans", sans-serif;
+    padding: 0.8em 1em;
+    border-radius: 50px;
+    text-decoration: none;
+}
+
+@-webkit-keyframes animates {
+    0% {
+        -webkit-transform: translateX(5%);
+        transform: translateX(5%);
+    }
+    100% {
+        -webkit-transform: translateX(-5%);
+        transform: translateX(-5%);
+    }
+}
+
+@keyframes animates {
+    0% {
+        -webkit-transform: translateX(5%);
+        transform: translateX(5%);
+    }
+    100% {
+        -webkit-transform: translateX(-5%);
+        transform: translateX(-5%);
+    }
+}
+
+@-webkit-keyframes animatestext {
+    0% {
+        -webkit-transform: rotate(5deg);
+        transform: rotate(5deg);
+    }
+    100% {
+        -webkit-transform: rotate(-5deg);
+        transform: rotate(-5deg);
+    }
+}
+
+@keyframes animatestext {
+    0% {
+        -webkit-transform: rotate(5deg);
+        transform: rotate(5deg);
+    }
+    100% {
+        -webkit-transform: rotate(-5deg);
+        transform: rotate(-5deg);
+    }
+}

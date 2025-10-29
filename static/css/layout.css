@@ -1,0 +1,17 @@
+{
+    % extends './layout.html' %
+}
+
+<!-- {
+    % block title %
+}
+
+{
+    {
+        data.tituo
+    }
+}
+
+{
+    % endblock %
+}
