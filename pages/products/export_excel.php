@@ -1,4 +1,5 @@
 <?php
+session_start();
 require '../../vendor/autoload.php';
 require '../../bd/conexion.php';
 
@@ -8,19 +9,33 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 
 // -------------------------------------------------------------
-// 1. Recibir filtros de mes (texto: enero, febrero, etc.)
+// 1. Verificar sesión y obtener procesos del usuario
 // -------------------------------------------------------------
-$mesInicio = $_GET['mes_inicio'] ?? '';
-$mesFin    = $_GET['mes_fin'] ?? '';
+if (!isset($_SESSION['usuario']) || !isset($_SESSION['procesos'])) {
+    echo "<script>alert('Sesión no válida. Inicie sesión nuevamente.'); window.location='../../index.php';</script>";
+    exit;
+}
 
-$mesInicio = strtolower(trim($mesInicio));
-$mesFin    = strtolower(trim($mesFin));
+$procesosUsuario = $_SESSION['procesos'];
+if (empty($procesosUsuario)) {
+    echo "<script>alert('No tiene procesos asignados.'); window.location='../../index.php';</script>";
+    exit;
+}
+
+// Generar placeholders dinámicos para los procesos
+$placeholdersProcesos = implode(',', array_fill(0, count($procesosUsuario), '?'));
 
 // -------------------------------------------------------------
-// 2. Armar filtro dinámico según rango de meses en texto
+// 2. Recibir filtros de mes (texto: enero, febrero, etc.)
+// -------------------------------------------------------------
+$mesInicio = strtolower(trim($_GET['mes_inicio'] ?? ''));
+$mesFin    = strtolower(trim($_GET['mes_fin'] ?? ''));
+
+// -------------------------------------------------------------
+// 3. Filtro dinámico según rango de meses
 // -------------------------------------------------------------
 $filtroMes = '';
-$params = [];
+$params = $procesosUsuario; // siempre primero van los procesos
 
 if ($mesInicio !== '' && $mesFin !== '') {
     $ordenMeses = [
@@ -33,20 +48,18 @@ if ($mesInicio !== '' && $mesFin !== '') {
 
     if ($idxInicio !== false && $idxFin !== false) {
         if ($idxInicio > $idxFin) {
-            $tmp = $idxInicio;
-            $idxInicio = $idxFin;
-            $idxFin = $tmp;
+            [$idxInicio, $idxFin] = [$idxFin, $idxInicio];
         }
 
         $rangoMeses = array_slice($ordenMeses, $idxInicio, $idxFin - $idxInicio + 1);
-        $placeholders = implode(',', array_fill(0, count($rangoMeses), '?'));
-        $filtroMes = "WHERE LOWER(r.mes) IN ($placeholders)";
-        $params = $rangoMeses;
+        $placeholdersMeses = implode(',', array_fill(0, count($rangoMeses), '?'));
+        $filtroMes = "AND LOWER(r.mes) IN ($placeholdersMeses)";
+        $params = array_merge($params, $rangoMeses);
     }
 }
 
 // -------------------------------------------------------------
-// 3. Consulta SQL con joins a Proceso y Coordinacion
+// 4. Consulta SQL: solo procesos asignados al usuario
 // -------------------------------------------------------------
 $sql = "
 SELECT 
@@ -68,6 +81,7 @@ FROM dbo.indicadores i
 LEFT JOIN dbo.indicadores_resultado r ON i.id_indicador = r.id_idicador
 INNER JOIN dbo.Proceso j ON i.idProceso = j.idProceso
 INNER JOIN dbo.Coordinacion k ON i.idCoordinacion = k.idCoordinacion
+WHERE i.idProceso IN ($placeholdersProcesos)
 $filtroMes
 ORDER BY i.id_indicador;
 ";
@@ -80,7 +94,7 @@ if ($stmt === false) {
 }
 
 // -------------------------------------------------------------
-// 4. Recolectar filas
+// 5. Recolectar filas
 // -------------------------------------------------------------
 $rows = [];
 while ($r = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
@@ -88,7 +102,7 @@ while ($r = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
 }
 
 // -------------------------------------------------------------
-// 5. Mostrar aviso si no hay filas
+// 6. Si no hay registros
 // -------------------------------------------------------------
 if (count($rows) === 0) {
     ?>
@@ -96,13 +110,12 @@ if (count($rows) === 0) {
     <html>
     <head>
       <meta charset="utf-8">
-      <title>No hay datos para el rango seleccionado</title>
+      <title>No hay datos</title>
       <link rel="stylesheet" href="../../static/css/bootstrap.min.css">
     </head>
     <body class="p-4">
       <div class="container">
         <h3>No se encontraron registros para el rango de meses seleccionado.</h3>
-        <p>Verifica que los valores de la columna <b>mes</b> en la tabla <code>indicadores_resultado</code> estén escritos correctamente (ejemplo: <i>enero, febrero, marzo...</i>).</p>
         <a class="btn btn-primary" href="vista_exportar_excel.php">Volver al filtro</a>
       </div>
     </body>
@@ -114,7 +127,7 @@ if (count($rows) === 0) {
 }
 
 // -------------------------------------------------------------
-// 6. Crear y rellenar el Excel
+// 7. Crear y rellenar el Excel
 // -------------------------------------------------------------
 $spreadsheet = new Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
@@ -162,7 +175,7 @@ foreach ($rows as $row) {
 }
 
 // -------------------------------------------------------------
-// 7. Dar estilo al encabezado
+// 8. Estilos del encabezado
 // -------------------------------------------------------------
 $sheet->getStyle("A1:N1")->applyFromArray([
     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
@@ -178,7 +191,7 @@ $sheet->setAutoFilter("A1:N1");
 $sheet->freezePane("A2");
 
 // -------------------------------------------------------------
-// 8. Descargar el archivo Excel
+// 9. Descargar Excel
 // -------------------------------------------------------------
 $writer = new Xlsx($spreadsheet);
 $filename = "indicadores_" . ($mesInicio ?: 'todos') . "_a_" . ($mesFin ?: 'todos') . ".xlsx";

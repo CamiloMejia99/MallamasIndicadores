@@ -1,5 +1,11 @@
 <?php
-include 'bd/conexion.php';
+  session_start();
+
+  // Si el usuario ya tiene sesión activa, redirigirlo al panel principal
+  if (isset($_SESSION['usuario'])) {
+      header("Location: pages/products/list.php"); // o la ruta que uses después de iniciar sesión
+      exit;
+  }
 ?>
 
 <!DOCTYPE html>
@@ -145,34 +151,23 @@ include 'bd/conexion.php';
                 <div class="row text-center border rounded">
                     <div class="col-4  p-2">
                         <!--INICIO LOGIN-->
-                        
                         <div class="login-container">
-                            
+                            <h4 id="scrollspyHeading1"><b>Iniciar Sesión </b></h4>
                             <div class="col-100">
-                                <div class="container">
-                                  <div class="row">
-                                    <div class="col-12">
-                                      <section class="content">
-                                        <div class="container-fluid">
-                                          <div class="row">
-                                            <div class="col-lg-12 col-12">
-                                              <div class="small-box bg-green">
-                                                <div class="inner">
-                                                  <h3>Registrar</h3>
-                                                  <p> Aquí tambien encontraras el listado de los registros </p>
-                                                </div>
-                                                <div class="icon">
-                                                  <i class="ion ion-person"></i>
-                                                </div>
-                                                <a href="pages/products/list.php" class="small-box-footer">Has click aquí <i
-                                                    class="fas fa-arrow-circle-right"></i></a>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </section>
+                                <form class="row g-3" name="contacto"  method="POST" action="pages/products/iniciarSesion.php ">
+                                    <div class="container" align="left">
+                                        <br>
+                                        <Label style= "color: #555;">Usuario:</Label>
+                                        <input type="text" name="codigo" placeholder="" class="form-control" id="validationDefault05" required>
+                                        <Label style = "color: #555">Contraseña:</Label>
+                                        <input type="password" name="contraseña" autocomplete="new-password" placeholder=" " class="form-control" id="validationDefault05" required>
+                                        <br><button class="btn btn-success border-dark text-white  w-100 " name="enviar" >Iniciar Sesion</button>
                                     </div>
-                                  </div>
+                                </form>
+                                <br>
+                                <div  class="links">
+                                    <p><a href="#recuperarContraseña">¿Olvidaste tu contraseña?</a><br>
+                                    ¿No tienes cuenta? <a href="php/SolicitudesRegistro.php">Solicita tu Registro aquí</a></p>
                                 </div>
                             </div>
                         </div>

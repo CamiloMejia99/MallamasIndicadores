@@ -1,5 +1,44 @@
 <?php
-include '../../bd/conexion.php';
+  session_start();
+
+    // Bloquea acceso si no es super usuario
+  if (!isset($_SESSION['usuario'])) {
+      header("Location: ../../index.php");
+      exit;
+  }
+
+  $esSuperUsuario = $_SESSION['usuario']['super_usuario'] ?? 0;
+
+  // Ejemplo de validación
+  if (!$esSuperUsuario) {
+      echo "<script>alert('No tienes permisos para registrar indicadores.'); window.location='list.php';</script>";
+      exit;
+  }
+  include '../../bd/conexion.php';
+  if (!isset($_SESSION['usuario'])) {
+      header("Location: ../../index.php");
+      exit;
+  }
+
+
+// Obtener procesos del usuario desde la sesión
+$procesosSesion = $_SESSION['procesos'] ?? [];
+
+// Normalizar a lista de IDs (acepta dos formatos: [1,2,3] o [['idProceso'=>1,'Proceso'=>'X'], ...])
+$procesosAUsar = [];
+if (!empty($procesosSesion)) {
+    // si es array de arrays (con idProceso), extraemos ids
+    if (is_array($procesosSesion) && isset($procesosSesion[0]) && is_array($procesosSesion[0]) && isset($procesosSesion[0]['idProceso'])) {
+        foreach ($procesosSesion as $p) {
+            $procesosAUsar[] = (int)$p['idProceso'];
+        }
+    } else {
+        // si viene ya como array simple de ids
+        foreach ($procesosSesion as $p) {
+            $procesosAUsar[] = (int)$p;
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -66,6 +105,11 @@ include '../../bd/conexion.php';
     <!------------cabezera-------------------------->
     <header>
       <nav id="navbar-example2" class="navbar px-3 mb-3" style="background-color: #038f03ff;">
+        <!--INICIO BOTON BACK-->    
+        <a href="list.php" class="btn"   style="width: 70px; height: 50px; border-color: transparent;">
+            <img style="width:70px; height:50px;" class="card-img-top" src="../../static/img/flechaIzquierda.png" alt="Regresar Menu" >
+        </a>
+        <!--FIN BOTON BACK--> 
         <a href="../../index.php" class="brand-link">
           <img src="../../static/img/CycLogo.png" alt="MLLS LOGO" class="brand-image ">
         </a>
@@ -86,13 +130,26 @@ include '../../bd/conexion.php';
               <label for="idProceso">PROCESO</label>
               <select class="form-select"  id="idProceso" name="idProceso" required>
                 <option>Seleccione un proceso</option>
-                <?php
-                include '../../bd/conexion.php';
-                $query = "SELECT idProceso, Proceso FROM dbo.Proceso ";
-                $result = sqlsrv_query($conexion, $query);
-                while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) {
-                    echo "<option value='{$row['idProceso']}'>{$row['Proceso']}</option>";
-                }
+                 <?php
+                  if (!empty($procesosAUsar)) {
+                      // construir placeholders y ejecutar consulta sólo con los procesos del usuario
+                      $placeholders = implode(',', array_fill(0, count($procesosAUsar), '?'));
+                      $sql = "SELECT idProceso, Proceso FROM dbo.Proceso WHERE idProceso IN ($placeholders) ORDER BY Proceso";
+                      $stmt = sqlsrv_query($conexion, $sql, $procesosAUsar);
+
+                      if ($stmt === false) {
+                          echo '<option value="">Error al cargar procesos</option>';
+                      } else {
+                          while ($r = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+                              $id = (int)$r['idProceso'];
+                              $nombre = htmlspecialchars($r['Proceso'], ENT_QUOTES, 'UTF-8');
+                              echo "<option value='{$id}'>{$nombre}</option>";
+                          }
+                          sqlsrv_free_stmt($stmt);
+                      }
+                  } else {
+                      echo "<option value=''>⚠️ No tiene procesos asignados</option>";
+                  }
                 ?>
               </select>
             </div>
@@ -109,53 +166,6 @@ include '../../bd/conexion.php';
                 }
                 ?>
               </select>
-              <!-- <input type="text" class="form-control" id="coordinacion" name="coordinacion" required> 
-              <select class="form-select"  id="coordinacion" name="coordinacion" aria-label="Default select example"  required>
-                <option  >Seleccione un proceso</option>
-                <option value="Jefatura de Planeacion">Jefatura de Planeacion</option>
-                <option value="Jefatura Juridica">Jefatura Juridica</option>
-                <option value="Jefatura de Control interno">Jefatura de Control interno</option>
-                <option value="Coordinacion de Gestion Integral De Atencion En Salud">Coordinacion de Gestion Integral De Atencion En Salud</option>
-                <option value="Coordinacion de Gestion Clinica">Coordinacion de Gestion Clinica</option>
-                <option value="Coordinacion de Vigilancia Epidemiologica">Coordinacion de Vigilancia Epidemiologica</option>
-                <option value="Coordinacion de Gestion Modelo De Salud Intercultural">Coordinacion de Gestion Modelo De Salud Intercultural</option>
-                <option value="Coordinacion de Atencion Al Usuario">Coordinacion de Atencion Al Usuario</option>
-                <option value="Coordinacion de Conformacion De La Red De Prestadores Servicios De Salud">Coordinacion de Conformacion De La Red De Prestadores Servicios De Salud</option>
-                <option value="Coordinacion de Afiliacion Y Administracion De Base De Datos">Coordinacion de Afiliacion Y Administracion De Base De Datos</option>
-                <option value="Coordinacion de Movilidad">Coordinacion de Movilidad</option>
-                <option value="Coordinacion de Comunicaciones">Coordinacion de Comunicaciones</option>
-                <option value="Coordinacion de Calidad Red De Servicios">Coordinacion de Calidad Red De Servicios</option>
-                <option value="Coordinacion de Sistemas Integrados De Gestion">Coordinacion de Sistemas Integrados De Gestion</option>
-                <option value="Coordinacion de Contabilidad Y Presupuesto">Coordinacion de Contabilidad Y Presupuesto</option>
-                <option value="Coordinacion de Cartera">Coordinacion de Cartera</option>
-                <option value="Coordinacion de Recobros Y No UPC">Coordinacion de Recobros Y No UPC</option>
-                <option value="Coordinacion de Gestion Humana">Coordinacion de Gestion Humana</option>
-                <option value="Coordinacion de Tesoreria">Coordinacion de Tesoreria</option>
-                <option value="Coordinacion de Radicacion Y Auditoria De Cuentas">Coordinacion de Radicacion Y Auditoria De Cuentas</option>
-                <option value="Coordinacion de Gestion Documental">Coordinacion de Gestion Documental</option>
-                <option value="Coordinacion de Almacen">Coordinacion de Almacen</option>
-                <option value="Coordinacion de Estadistica">Coordinacion de Estadistica</option>
-                <option value="Coordinacion de Gestion De Informacion">Coordinacion de Gestion De Informacion</option>
-                <option value="Coordinacion de Informatica Y Mantenimiento">Coordinacion de Informatica Y Mantenimiento</option>
-                <option value="Coordinacion de Regional Sur">Coordinacion de Regional Sur</option>
-                <option value="Coordinacion de Regional Noroccidental">Coordinacion de Regional Noroccidental</option>
-                <option value="Coordinacion de Regional Centro Oriental">Coordinacion de Regional Centro Oriental</option>
-                <option value="Coordinacion de Modelo De Atencion">Coordinacion de Modelo De Atencion</option>
-                <option value="Coordinacion de Salud Publica">Coordinacion de Salud Publica</option>
-                <option value="Coordinacion de Usuarios">Coordinacion de Usuarios</option>
-                <option value="Coordinacion de Odontologica Apoyo DX">Coordinacion de Odontologica Apoyo DX</option>
-                <option value="Coordinacion de Seguridad Del Paciente">Coordinacion de Seguridad Del Paciente</option>
-                <option value="Coordinacion de Farmaceutica">Coordinacion de Farmaceutica</option>
-                <option value="Coordinacion de Salud Mental">Coordinacion de Salud Mental</option>
-                <option value="Coordinacion de Calidad Y Seguridad Del Usuario">Coordinacion de Calidad Y Seguridad Del Usuario</option>
-                <option value="Coordinacion de Salud Publica">Coordinacion de Salud Publica</option>
-                <option value="Coordinacion de Recursos Financieros">Coordinacion de Recursos Financieros</option>
-                <option value="Coordinacion de Gestion Talento Humano">Coordinacion de Gestion Talento Humano</option>
-                <option value="Coordinacion de Calidad">Coordinacion de Calidad</option>
-                <option value="Coordinacion de Ambiente Fisico Y Tecnologico">Coordinacion de Ambiente Fisico Y Tecnologico</option>
-                <option value="Coordinacion de Gestion Informacion">Coordinacion de Gestion Informacion</option>
-              </select>-->
-
             </div>
 
             <div class="form-group">

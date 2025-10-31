@@ -1,5 +1,13 @@
     <?php
     include '../../bd/conexion.php'; // conexión a la BD
+    session_start();
+    $procesosPermitidos = $_SESSION['procesos'] ?? [];
+    $idProceso = (int)$_POST['idProceso'];
+
+    if (!in_array($idProceso, $procesosPermitidos)) {
+        die("Error: No tiene permiso para registrar en este proceso.");
+    }
+
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $idProceso          = $_POST['idProceso'] ?? '';

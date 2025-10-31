@@ -1,4 +1,10 @@
 <?php
+  session_start();
+  // Si no hay sesión activa, redirigir al login
+  if (!isset($_SESSION['usuario'])) {
+      header("Location: ../../index.php");
+      exit;
+  }
   include '../../bd/conexion.php';
 
   // --- Configuración de paginación ---
@@ -61,6 +67,39 @@
   $countStmt = sqlsrv_query($conexion, $sqlCount, $countParams);
   $totalRegistros = sqlsrv_fetch_array($countStmt, SQLSRV_FETCH_ASSOC)['total'];
   $totalPaginas = ceil($totalRegistros / $registrosPorPagina);
+  
+  // --- Validar sesión ---
+  if (!isset($_SESSION['usuario']) || !isset($_SESSION['procesos'])) {
+      echo "<script>alert('Sesión expirada. Inicia sesión nuevamente.'); window.location='../../index.php';</script>";
+      exit;
+  }
+
+  // --- Procesos del usuario ---
+  $procesosUsuario = $_SESSION['procesos'];
+  $procesosLista = [];
+
+  if (!empty($procesosUsuario)) {
+      $placeholders = implode(',', array_fill(0, count($procesosUsuario), '?'));
+      $sqlProcesos = "SELECT idProceso, Proceso FROM dbo.Proceso WHERE idProceso IN ($placeholders)";
+      $stmtProcesos = sqlsrv_query($conexion, $sqlProcesos, $procesosUsuario);
+
+      if ($stmtProcesos !== false) {
+          while ($row = sqlsrv_fetch_array($stmtProcesos, SQLSRV_FETCH_ASSOC)) {
+              $procesosLista[] = $row;
+          }
+      }
+  }
+
+  // --- Filtros por mes ---
+  $mesesOrden = [
+      "enero" => 1, "febrero" => 2, "marzo" => 3, "abril" => 4,
+      "mayo" => 5, "junio" => 6, "julio" => 7, "agosto" => 8,
+      "septiembre" => 9, "octubre" => 10, "noviembre" => 11, "diciembre" => 12
+  ];
+
+  $mesInicio = $_GET['mes_inicio'] ?? '';
+  $mesFin = $_GET['mes_fin'] ?? '';
+  $procesosSeleccionados = $_GET['procesos'] ?? [];
 ?>
 
 <!DOCTYPE html>
@@ -151,38 +190,61 @@
     <div class="container mt-4">
       <div class="card border-info shadow">
         <div class="card-body">
-          <form method="GET" action="vista_exportar_excel.php" class="row g-3">
-            <div class="col-md-3">
-              <label for="mes_inicio" class="form-label"><b>Mes inicio</b></label>
-              <select class="form-control" name="mes_inicio" id="mes_inicio" required>
-                <option value="">--Seleccione--</option>
-                <?php foreach ($mesesOrden as $mes => $num): ?>
-                  <option value="<?= $mes ?>" <?= ($mes == $mesInicio ? 'selected' : '') ?>>
-                    <?= ucfirst($mes) ?>
-                  </option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label for="mes_fin" class="form-label"><b>Mes fin</b></label>
-              <select class="form-control" name="mes_fin" id="mes_fin" required>
-                <option value="">--Seleccione--</option>
-                <?php foreach ($mesesOrden as $mes => $num): ?>
-                  <option value="<?= $mes ?>" <?= ($mes == $mesFin ? 'selected' : '') ?>>
-                    <?= ucfirst($mes) ?>
-                  </option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="col-md-3 align-self-end">
-              <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filtrar</button>
-            </div>
-            <div class="col-md-3 align-self-end">
-              <a href="export_excel.php?mes_inicio=<?= $mesInicio ?>&mes_fin=<?= $mesFin ?>" class="btn btn-success">
-                <i class="fas fa-file-excel"></i> Exportar a Excel
-              </a>
-            </div>
-          </form>
+          <form method="GET" action="export_excel.php" id="filtroForm">
+                <div class="row g-3">
+                    <!-- Filtro Mes Inicio -->
+                    <div class="col-md-3">
+                        <label for="mes_inicio" class="form-label"><b>Mes inicio</b></label>
+                        <select class="form-control" name="mes_inicio" id="mes_inicio" required>
+                            <option value="">--Seleccione--</option>
+                            <?php foreach ($mesesOrden as $mes => $num): ?>
+                                <option value="<?= $mes ?>" <?= ($mes == $mesInicio ? 'selected' : '') ?>>
+                                    <?= ucfirst($mes) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- Filtro Mes Fin -->
+                    <div class="col-md-3">
+                        <label for="mes_fin" class="form-label"><b>Mes fin</b></label>
+                        <select class="form-control" name="mes_fin" id="mes_fin" required>
+                            <option value="">--Seleccione--</option>
+                            <?php foreach ($mesesOrden as $mes => $num): ?>
+                                <option value="<?= $mes ?>" <?= ($mes == $mesFin ? 'selected' : '') ?>>
+                                    <?= ucfirst($mes) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- Procesos -->
+                    <div class="col-md-6">
+                        <label class="form-label"><b>Seleccionar procesos</b></label>
+                        <div class="border rounded p-2" style="max-height:180px; overflow-y:auto;">
+                            <?php if (!empty($procesosLista)): ?>
+                                <?php foreach ($procesosLista as $proceso): ?>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="procesos[]" 
+                                            value="<?= $proceso['idProceso'] ?>"
+                                            <?= in_array($proceso['idProceso'], $procesosSeleccionados) ? 'checked' : '' ?>>
+                                        <label class="form-check-label"><?= htmlspecialchars($proceso['Proceso']) ?></label>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <p>No tiene procesos asignados.</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="col-md-6 mt-3">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-file-excel"></i> Exportar a Excel
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
       </div>
     </div>

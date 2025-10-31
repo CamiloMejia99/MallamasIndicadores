@@ -1,4 +1,10 @@
 <?php
+session_start();
+  // Si no hay sesión activa, redirigir al login
+  if (!isset($_SESSION['usuario'])) {
+      header("Location: ../../index.php");
+      exit;
+  }
 include '../../bd/conexion.php';
 
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
@@ -24,6 +30,25 @@ $stmtResultados = sqlsrv_query($conexion, $sqlResultados, [$id]);
 if ($stmtResultados === false) {
     echo "<script>alert('Error al consultar resultados');window.location.href='list.php';</script>";
     exit;
+}
+
+// Obtener procesos del usuario desde la sesión
+$procesosSesion = $_SESSION['procesos'] ?? [];
+
+// Normalizar a lista de IDs (acepta dos formatos: [1,2,3] o [['idProceso'=>1,'Proceso'=>'X'], ...])
+$procesosAUsar = [];
+if (!empty($procesosSesion)) {
+    // si es array de arrays (con idProceso), extraemos ids
+    if (is_array($procesosSesion) && isset($procesosSesion[0]) && is_array($procesosSesion[0]) && isset($procesosSesion[0]['idProceso'])) {
+        foreach ($procesosSesion as $p) {
+            $procesosAUsar[] = (int)$p['idProceso'];
+        }
+    } else {
+        // si viene ya como array simple de ids
+        foreach ($procesosSesion as $p) {
+            $procesosAUsar[] = (int)$p;
+        }
+    }
 }
 ?>
 
@@ -90,6 +115,11 @@ if ($stmtResultados === false) {
     <!------------cabezera-------------------------->
     <header>
       <nav id="navbar-example2" class="navbar px-3 mb-3" style="background-color: #038f03ff;">
+        <!--INICIO BOTON BACK-->    
+        <a href="list.php" class="btn"   style="width: 70px; height: 50px; border-color: transparent;">
+            <img style="width:70px; height:50px;" class="card-img-top" src="../../static/img/flechaIzquierda.png" alt="Regresar Menu" >
+        </a>
+        <!--FIN BOTON BACK--> 
         <a href="../../index.php" class="brand-link">
           <img src="../../static/img/CycLogo.png" alt="MLLS LOGO" class="brand-image ">
         </a>
@@ -111,11 +141,31 @@ if ($stmtResultados === false) {
 
 
 
-          <!-- <div class="mb-3">
-              <label class="form-label">Coordinación</label>
-              <input type="text" name="coordinacion" class="form-control" 
-                    value="<?= htmlspecialchars($rowIndicador['coordinacion']) ?>" required>
-          </div> -->
+          <label for="idProceso">PROCESO</label>
+              <select class="form-select"  id="idProceso" name="idProceso" required>
+                <option>Seleccione un proceso</option>
+                 <?php
+                  if (!empty($procesosAUsar)) {
+                      // construir placeholders y ejecutar consulta sólo con los procesos del usuario
+                      $placeholders = implode(',', array_fill(0, count($procesosAUsar), '?'));
+                      $sql = "SELECT idProceso, Proceso FROM dbo.Proceso WHERE idProceso IN ($placeholders) ORDER BY Proceso";
+                      $stmt = sqlsrv_query($conexion, $sql, $procesosAUsar);
+
+                      if ($stmt === false) {
+                          echo '<option value="">Error al cargar procesos</option>';
+                      } else {
+                          while ($r = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+                              $id = (int)$r['idProceso'];
+                              $nombre = htmlspecialchars($r['Proceso'], ENT_QUOTES, 'UTF-8');
+                              echo "<option value='{$id}'>{$nombre}</option>";
+                          }
+                          sqlsrv_free_stmt($stmt);
+                      }
+                  } else {
+                      echo "<option value=''>⚠️ No tiene procesos asignados</option>";
+                  }
+                ?>
+              </select>
 
           <div class="form-group">
               <label for="coordinacion">Coordinación</label>
@@ -135,41 +185,7 @@ if ($stmtResultados === false) {
                     }
                     ?>
                </select>
-              <!-- <input type="text" class="form-control" id="coordinacion" name="coordinacion" required>
-              <select class="form-select"  id="coordinacion" name="coordinacion" aria-label="Default select example"  required>
-                <option value="Jefatura de planeacion ">Jefatura de planeacion </option>
-                <option value="Coordinacion de sistemas integrados ">Coordinacion de sistemas integrados </option>
-                <option value="Coordinacion atencion al usuario ">Coordinacion atencion al usuario </option>
-                <option value="Coordinacion atencion al usuario">Coordinacion atencion al usuario</option>
-                <option value="Coordinacion de atencion ala usuario ">Coordinacion de atencion ala usuario </option>
-                <option value="Coordinacion de atencion al usuario ">Coordinacion de atencion al usuario </option>
-                <option value="Coordinacion atencion al asuario">Coordinacion atencion al asuario</option>
-                <option value="Coordinacion de atencion al usuario">Coordinacion de atencion al usuario</option>
-                <option value="Coordinacion de calidad red de servicios ">Coordinacion de calidad red de servicios </option>
-                <option value="Coordinacion calidad red de servicios ">Coordinacion calidad red de servicios </option>
-                <option value="Coordinacion de afiliacion y adminstracion de  base de datos ">Coordinacion de afiliacion y adminstracion de  base de datos </option>
-                <option value="Coordinacion de Movilidad">Coordinacion de Movilidad</option>
-                <option value="Coordinacion de comunicaciones ">Coordinacion de comunicaciones </option>
-                <option value="Coordinacion gestion modelo de salud intercultural">Coordinacion gestion modelo de salud intercultural</option>
-                <option value="Gestion de la conformacion de la red de prestadores ">Gestion de la conformacion de la red de prestadores </option>
-                <option value="Coordinacion de gestion integral de atencion en salud ">Coordinacion de gestion integral de atencion en salud </option>
-                <option value="Coordinacion vigilancia epidemiologica">Coordinacion vigilancia epidemiologica</option>
-                <option value="Coordinacion Gestion clinica ">Coordinacion Gestion clinica </option>
-                <option value="Coordinacion de gestion humana">Coordinacion de gestion humana</option>
-                <option value="Coordinacion de tesoreria ">Coordinacion de tesoreria </option>
-                <option value="Coordinacion de cartera ">Coordinacion de cartera </option>
-                <option value="Coordinacion de Recobros y NO UPC">Coordinacion de Recobros y NO UPC</option>
-                <option value="Coordinacion de contabilidad y presupuesto ">Coordinacion de contabilidad y presupuesto </option>
-                <option value="Coordinacion de radicacion y auditoria de cuentas ">Coordinacion de radicacion y auditoria de cuentas </option>
-                <option value="Coordinacion de estadistica ">Coordinacion de estadistica </option>
-                <option value="Coordinacion de gestion de informacion ">Coordinacion de gestion de informacion </option>
-                <option value="Coordinacion Gestion documental">Coordinacion Gestion documental</option>
-                <option value="Coordinacion de informatica y mantenimiento">Coordinacion de informatica y mantenimiento</option>
-                <option value="Coordinacion de almacen ">Coordinacion de almacen </option>
-                <option value="Jefatura juridica">Jefatura juridica</option>
-                <option value="Jefatura de control interno ">Jefatura de control interno </option>
-              </select> -->
-
+            
             </div>
 
           <div class="mb-3">

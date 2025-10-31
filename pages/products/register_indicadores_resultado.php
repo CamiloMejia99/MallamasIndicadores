@@ -1,5 +1,25 @@
 <?php
 include '../../bd/conexion.php';
+  session_start();
+
+  // Bloquea acceso si no es super usuario
+  if (!isset($_SESSION['usuario'])) {
+      header("Location: ../../index.php");
+      exit;
+  }
+
+  $esSuperUsuario = $_SESSION['usuario']['super_usuario'] ?? 0;
+
+  // Ejemplo de validación
+  if (!$esSuperUsuario) {
+      echo "<script>alert('No tienes permisos para registrar indicadores.'); window.location='list.php';</script>";
+      exit;
+  }
+  // Si no hay sesión activa, redirigir al login
+  if (!isset($_SESSION['usuario'])) {
+      header("Location: ../../index.php");
+      exit;
+  }
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -66,6 +86,11 @@ include '../../bd/conexion.php';
     <!------------cabezera-------------------------->
     <header>
       <nav id="navbar-example2" class="navbar px-3 mb-3" style="background-color: #038f03ff;">
+        <!--INICIO BOTON BACK-->    
+        <a href="list.php" class="btn"   style="width: 70px; height: 50px; border-color: transparent;">
+            <img style="width:70px; height:50px;" class="card-img-top" src="../../static/img/flechaIzquierda.png" alt="Regresar Menu" >
+        </a>
+        <!--FIN BOTON BACK--> 
         <a href="../../index.php" class="brand-link">
           <img src="../../static/img/CycLogo.png" alt="MLLS LOGO" class="brand-image ">
         </a>
