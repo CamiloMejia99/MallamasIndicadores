@@ -267,7 +267,7 @@
   </div><br><br>
   <!------------------------------------------ Modal Power bi MATRIZ DE INDICADORES --------------------------------->
   <div class="modal fade" id="modalPowerBI" tabindex="-1" aria-labelledby="modalPowerBILabel" aria-hidden="true">
-            <div class="modal-dialog modal-xl" style="max-width: 95%;">
+            <div class="modal-dialog modal-xl" style="max-width: 100%;">
                 <div class="modal-content">
                     <div class="modal-header" style="background-color:#038f03ff; color:white;">
                         <h5 class="modal-title" id="modalPowerBILabel">Tablero MATRIZ DE INDICADORES</h5>
