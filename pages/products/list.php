@@ -12,7 +12,7 @@
   // --- Obtener procesos asignados ---
   $procesosUsuario = $_SESSION['procesos'] ?? [];
 
-  // 🔹 Verificar si el usuario tiene acceso a Power BI
+  //  Verificar si el usuario tiene acceso a Power BI
   $tieneAccesoPBi = false;
   // --- Verificar si el usuario es superusuario ---
   $esSuperUsuario = isset($_SESSION['usuario']['super_usuario']) && $_SESSION['usuario']['super_usuario'] == 1;
@@ -229,13 +229,21 @@
                                   <td><?= htmlspecialchars($row[$col]) ?></td>
                                 <?php endforeach; ?>
                                 <td>
-                                  <a href="edit.php?id=<?= $row['id_indicador'] ?>" class="btn btn-sm btn-primary">
-                                    <i class='fas fa-edit'></i>
-                                  </a>
-                                  <a href="proceso_eliminar.php?id=<?= $row['id_indicador']; ?>"
-                                    class="btn btn-danger btn-sm" onclick="return confirmarEliminacion(event);">
-                                    <i class='fas fa-trash'></i>
-                                  </a>
+                                  <?php if ($esSuperUsuario): ?>
+                                      <!-- Botones solo visibles para super usuario -->
+                                      <a href="edit.php?id=<?= $row['id_indicador'] ?>" class="btn btn-sm btn-primary">
+                                          <i class='fas fa-edit'></i>
+                                      </a>
+                                      <a href="proceso_eliminar.php?id=<?= $row['id_indicador']; ?>"
+                                          class="btn btn-danger btn-sm" onclick="return confirmarEliminacion(event);">
+                                          <i class='fas fa-trash'></i>
+                                      </a>
+                                  <?php else: ?>
+                                      <!-- Usuario común: sin permisos para editar/eliminar -->
+                                      <button class="btn btn-sm btn-secondary" title="Sin permiso" disabled>
+                                          <i class='fas fa-lock'></i>
+                                      </button>
+                                  <?php endif; ?>
                                 </td>
                               </tr>
                             <?php endwhile; ?>

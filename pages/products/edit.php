@@ -5,12 +5,20 @@ session_start();
       header("Location: ../../index.php");
       exit;
   }
-include '../../bd/conexion.php';
+
+
+// Si el usuario no es superusuario, redirigir con alerta
+if (!isset($_SESSION['usuario']['super_usuario']) || $_SESSION['usuario']['super_usuario'] != 1) {
+    echo "<script>alert('No tiene permisos para editar registros.');window.location.href='list.php';</script>";
+    exit;
+}
 
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     echo "<script>alert('ID inválido');window.location.href='list.php';</script>";
     exit;
 }
+
+include '../../bd/conexion.php';
 
 $id = intval($_GET['id']);
 
