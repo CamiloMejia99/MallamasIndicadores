@@ -206,17 +206,21 @@
                   <div class="container-fluid">
                     <div class="table-responsive">
                       <table class="table table-hover table-bordered">
+                        <?php
+                          $orden      = $_GET['order'] ?? 'id_indicador';
+                          $direccion  = ($_GET['dir'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
+                        ?>
                         <thead class="table-light">
                           <tr>
                             <?php foreach ($columnas as $col): ?>
-                              <th>
-                                <a href="?order=<?= $col ?>&dir=<?= ($orden === $col && $direccion === 'ASC') ? 'DESC' : 'ASC' ?>">
-                                  <?= ucfirst($col) ?>
-                                  <?php if ($orden === $col): ?>
-                                    <?= $direccion === "ASC" ? "(↓)" : "(↑)" ?>
+                                <th>
+                                    <a href="?order=<?= $col ?>&dir=<?= ($orden === $col && $direccion === 'ASC') ? 'DESC' : 'ASC' ?>">
+                                        <?= ucfirst($col) ?>
+                                        <?php if ($orden === $col): ?>
+                                        <?= $direccion === "ASC" ? "(↓)" : "(↑)" ?>
                                   <?php endif; ?>
-                                </a>
-                              </th>
+                                    </a>
+                                </th>
                             <?php endforeach; ?>
                             <th>Opciones</th>
                           </tr>
@@ -275,7 +279,7 @@
   </div><br><br>
   <!------------------------------------------ Modal Power bi MATRIZ DE INDICADORES --------------------------------->
   <div class="modal fade" id="modalPowerBI" tabindex="-1" aria-labelledby="modalPowerBILabel" aria-hidden="true">
-            <div class="modal-dialog modal-xl" style="max-width: 100%;">
+            <div class="modal-dialog modal-xl" style="max-width: 90%;">
                 <div class="modal-content">
                     <div class="modal-header" style="background-color:#038f03ff; color:white;">
                         <h5 class="modal-title" id="modalPowerBILabel">Tablero MATRIZ DE INDICADORES</h5>
@@ -284,7 +288,7 @@
                         </button>
                     </div>
                     <div class="modal-body p-0">
-                        <div class="iframe-container" style="position:relative; width:100%; padding-bottom:70%; height:0; overflow:hidden;">
+                        <div class="iframe-container" style="position:relative; width:100%; padding-bottom:70%; height: 220px; overflow:hidden;">
                         <iframe src="https://app.powerbi.com/view?r=eyJrIjoiN2RlZmIzMTktMTQ2Yy00ZDVmLWE3NzgtNzc3MTc3ZGMyMzFlIiwidCI6ImIxMmQwMGE5LWZjYjMtNDgzNi1iMDk0LWU3ZWNmZDAyM2U5OSIsImMiOjR9"
                                 allowFullScreen="true"
                                 style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;">

@@ -9,7 +9,7 @@ extension=zip
 
 Abre el cmd y ve a esta ruta: C:\xampp\htdocs\MallamasCrud>
 ahora pega esta linea y dale enter:
-C:\xampp\htdocs\MallamasCrud>C:\xampp\php\php.exe composer.phar require phpoffice/phpspreadsheet
+C:\xampp\htdocs\MallamasCrud>C:\xampp\phpx
 
 
 

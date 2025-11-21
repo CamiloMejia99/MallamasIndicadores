@@ -48,7 +48,7 @@ if (!empty($procesosSesion)) {
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Restristrar</title>
-    <link rel="stylesheet" href="{{ url_for('../../static', filename='css/style.css')}}">
+
     <link rel="icon" type="image/x-icon" href="../../static/img/icon_pag.png">
     <link rel="stylesheet" type="text/css" href="../../static/css/style.css">
     <link rel="stylesheet"
@@ -59,7 +59,6 @@ if (!empty($procesosSesion)) {
     <link rel="stylesheet" href="../../static/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
     <link rel="stylesheet" href="../../static/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
     <link rel="stylesheet" href="../../static/plugins/jqvmap/jqvmap.min.css">
-    <link rel="stylesheet" href="{{ url_for('../../static', filename='css/adminlte.min.css')}}">
     <link rel="stylesheet" href="../../static/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
     <link rel="stylesheet" href="../../static/plugins/daterangepicker/daterangepicker.css">
     <link rel="stylesheet" href="../../static/plugins/summernote/summernote-bs4.min.css">
@@ -159,7 +158,7 @@ if (!empty($procesosSesion)) {
                 <option>Seleccione una coordinacion</option>
                 <?php
                 include '../../bd/conexion.php';
-                $query = "SELECT idCoordinacion, Coordinacion FROM dbo.Coordinacion ";
+                $query = "SELECT idCoordinacion, Coordinacion FROM dbo.Coordinacion ORDER BY Coordinacion ASC ";
                 $result = sqlsrv_query($conexion, $query);
                 while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) {
                     echo "<option value='{$row['idCoordinacion']}'>{$row['Coordinacion']}</option>";

@@ -112,14 +112,14 @@ include '../../bd/conexion.php';
             <div class="form-group">
               <label for="id_indicador">Indicador</label>
               <select class="form-control" id="id_indicador" name="id_indicador" required>
-                <option value="">Seleccione un indicador</option>
+                <option value="">Seleccione el codigo del indicador</option>
                 <?php
-                $sql = "SELECT id_indicador, nombre_indicador FROM indicadores ORDER BY nombre_indicador ASC";
+                $sql = "SELECT id_indicador, codigo FROM indicadores ORDER BY codigo ASC";
                 $stmt = sqlsrv_query($conexion, $sql);
 
                 if ($stmt !== false) {
                   while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-                    echo "<option value='{$row['id_indicador']}'>{$row['nombre_indicador']}</option>";
+                    echo "<option value='{$row['id_indicador']}'>{$row['codigo']}</option>";
                   }
                   sqlsrv_free_stmt($stmt);
                 }
