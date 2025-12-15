@@ -1,20 +1,22 @@
 <?php
 include '../../bd/conexion.php';
   session_start();
+  require_once '../../bd/validar_permisos.php';
+  require_once '../../bd/control_sesion.php';
+  
+  // // Bloquea acceso si no es super usuario
+  // if (!isset($_SESSION['usuario'])) {
+  //     header("Location: ../../index.php");
+  //     exit;
+  // }
 
-  // Bloquea acceso si no es super usuario
-  if (!isset($_SESSION['usuario'])) {
-      header("Location: ../../index.php");
-      exit;
-  }
+  // $esSuperUsuario = $_SESSION['usuario']['super_usuario'] ?? 0;
 
-  $esSuperUsuario = $_SESSION['usuario']['super_usuario'] ?? 0;
-
-  // Ejemplo de validación
-  if (!$esSuperUsuario) {
-      echo "<script>alert('No tienes permisos para registrar indicadores.'); window.location='list.php';</script>";
-      exit;
-  }
+  // // Ejemplo de validación
+  // if (!$esSuperUsuario) {
+  //     echo "<script>alert('No tienes permisos para registrar indicadores.'); window.location='list.php';</script>";
+  //     exit;
+  // }
   // Si no hay sesión activa, redirigir al login
   if (!isset($_SESSION['usuario'])) {
       header("Location: ../../index.php");
@@ -158,10 +160,16 @@ include '../../bd/conexion.php';
               <input type="number" class="form-control" id="dem" name="dem" required>
             </div>
 
-            <div class="form-group">
+            <!-- <div class="form-group">
               <label for="resultado">RESULTADO</label>
               <input type="text" class="form-control" id="resultado" name="resultado" required>
+            </div> -->
+
+            <div class="form-group">
+              <label for="resultado">ANALISIS</label>
+              <textarea id="analisis" name="analisis" required class="form-control" rows="3"></textarea>
             </div>
+
 
             <div class="mt-3">
               <button type="submit" class="btn btn-warning">Registrar</button>

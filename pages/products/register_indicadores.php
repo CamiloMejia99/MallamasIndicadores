@@ -1,24 +1,26 @@
 <?php
   session_start();
+  require_once '../../bd/validar_permisos.php';
+  require_once '../../bd/control_sesion.php';
 
-    // Bloquea acceso si no es super usuario
-  if (!isset($_SESSION['usuario'])) {
-      header("Location: ../../index.php");
-      exit;
-  }
+  //   // Bloquea acceso si no es super usuario
+  // if (!isset($_SESSION['usuario'])) {
+  //     header("Location: ../../index.php");
+  //     exit;
+  // }
 
-  $esSuperUsuario = $_SESSION['usuario']['super_usuario'] ?? 0;
+  // $esSuperUsuario = $_SESSION['usuario']['super_usuario'] ?? 0;
 
-  // Ejemplo de validación
-  if (!$esSuperUsuario) {
-      echo "<script>alert('No tienes permisos para registrar indicadores.'); window.location='list.php';</script>";
-      exit;
-  }
-  include '../../bd/conexion.php';
-  if (!isset($_SESSION['usuario'])) {
-      header("Location: ../../index.php");
-      exit;
-  }
+  // // Ejemplo de validación
+  // if (!$esSuperUsuario) {
+  //     echo "<script>alert('No tienes permisos para registrar indicadores.'); window.location='list.php';</script>";
+  //     exit;
+  // }
+  // include '../../bd/conexion.php';
+  // if (!isset($_SESSION['usuario'])) {
+  //     header("Location: ../../index.php");
+  //     exit;
+  // }
 
 
 // Obtener procesos del usuario desde la sesión

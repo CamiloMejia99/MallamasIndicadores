@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     try {
         // =======================
-        // 1️⃣ ACTUALIZAR INDICADOR
+        // ACTUALIZAR INDICADOR
         // =======================
         $sqlIndicador = "UPDATE dbo.indicadores 
                          SET idProceso = ?, 
@@ -59,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // =======================
-        // 2️⃣ ACTUALIZAR RESULTADOS
+        // ACTUALIZAR RESULTADOS
         // =======================
         if (!empty($_POST['id_result'])) {
             foreach ($_POST['id_result'] as $index => $id_result) {
@@ -67,20 +67,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $num        = $_POST['num'][$index] ?? 0;
                 $dem        = $_POST['dem'][$index] ?? 0;
                 $resultado  = $_POST['resultado'][$index] ?? '';
+                $analisis = $_POST['analisis'][$index] ?? '';
 
                 $sqlResultado = "UPDATE dbo.indicadores_resultado
                                  SET mes = ?, 
                                      num = ?, 
                                      dem = ?, 
-                                     resultado = ?
+                                     resultado = ?,
+                                     analisis = ?
                                  WHERE id_result = ? AND id_idicador = ?";
                 $paramsResultado = [
                     $mes, 
                     $num, 
                     $dem, 
                     $resultado, 
+                    $analisis,
                     $id_result, 
                     $id_indicador
+                    
                 ];
 
                 $stmtResultado = sqlsrv_query($conexion, $sqlResultado, $paramsResultado);
@@ -91,7 +95,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // =======================
-        // 3️⃣ CONFIRMAR CAMBIOS
+        // CONFIRMAR CAMBIOS
         // =======================
         sqlsrv_commit($conexion);
         echo "<script>alert('✅ Registro actualizado correctamente');window.location.href='list.php';</script>";

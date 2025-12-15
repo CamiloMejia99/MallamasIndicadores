@@ -1,5 +1,9 @@
 <?php
+session_start();
+
+
 include '../../bd/conexion.php';
+
 
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     echo "<script>alert('ID inválido');window.location.href='list.php';</script>";

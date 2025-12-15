@@ -12,7 +12,8 @@ $id_indicador = isset($_POST['id_indicador']) ? intval($_POST['id_indicador']) :
 $mes          = trim($_POST['mes'] ?? '');
 $num_raw      = trim($_POST['num'] ?? '');
 $dem_raw      = trim($_POST['dem'] ?? '');
-$resultado    = trim($_POST['resultado'] ?? '');
+$resultado    = (strval($num_raw  /$dem_raw) . "%");
+$analisis     = trim($_POST['analisis'] ?? '');
 
 // Validaciones básicas
 if ($id_indicador <= 0) {
@@ -51,9 +52,9 @@ if (!$exists) {
 sqlsrv_begin_transaction($conexion);
 
 try {
-    $sqlInsert = "INSERT INTO dbo.indicadores_resultado (id_idicador, mes, num, dem, resultado)
-                  VALUES (?, ?, ?, ?, ?)";
-    $paramsInsert = [$id_indicador, $mes, $num, $dem, $resultado];
+    $sqlInsert = "INSERT INTO dbo.indicadores_resultado (id_idicador, mes, num, dem, resultado, analisis)
+                  VALUES (?, ?, ?, ?, ?, ?)";
+    $paramsInsert = [$id_indicador, $mes, $num, $dem, $resultado, $analisis];
 
     $stmtInsert = sqlsrv_query($conexion, $sqlInsert, $paramsInsert);
 

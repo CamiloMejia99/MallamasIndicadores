@@ -1,5 +1,8 @@
 <?php
 session_start();
+  require_once '../../bd/validar_permisos.php';
+  require_once '../../bd/control_sesion.php';
+  
   // Si no hay sesión activa, redirigir al login
   if (!isset($_SESSION['usuario'])) {
       header("Location: ../../index.php");
@@ -7,16 +10,16 @@ session_start();
   }
 
 
-// Si el usuario no es superusuario, redirigir con alerta
-if (!isset($_SESSION['usuario']['super_usuario']) || $_SESSION['usuario']['super_usuario'] != 1) {
-    echo "<script>alert('No tiene permisos para editar registros.');window.location.href='list.php';</script>";
-    exit;
-}
+// // Si el usuario no es superusuario, redirigir con alerta
+// if (!isset($_SESSION['usuario']['super_usuario']) || $_SESSION['usuario']['super_usuario'] != 1) {
+//     echo "<script>alert('No tiene permisos para editar registros.');window.location.href='list.php';</script>";
+//     exit;
+// }
 
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    echo "<script>alert('ID inválido');window.location.href='list.php';</script>";
-    exit;
-}
+// if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+//     echo "<script>alert('ID inválido');window.location.href='list.php';</script>";
+//     exit;
+// }
 
 include '../../bd/conexion.php';
 
@@ -299,6 +302,16 @@ if (!empty($procesosSesion)) {
                                 value="<?= htmlspecialchars($rowResultado['resultado'], ENT_QUOTES, 'UTF-8') ?>">
                       </div>
                   </div>
+              </div>
+                
+              <div class="row g-2">
+                <div class="col-md-12">
+                  
+                  <textarea name="analisis[]" class="form-control" rows="3"><?= 
+                      htmlspecialchars($rowResultado['analisis'], ENT_QUOTES, 'UTF-8') 
+                  ?></textarea>
+
+                </div>
               </div>
             <?php endwhile; ?>
 

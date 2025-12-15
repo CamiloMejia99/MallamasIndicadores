@@ -45,6 +45,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
+            // Regenerar ID de sesión (seguridad)
+            session_regenerate_id(true);
+
             // Guardar todos los datos en sesión
             $_SESSION['usuario'] = [
                 'Cedula' => $usuario['Cedula'] ?? '',
@@ -56,6 +59,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 'super_usuario' => $usuario['super_usuario'] ?? 0
             ];
             $_SESSION['procesos'] = $procesos;
+
+            // Registrar última actividad
+            $_SESSION['ultima_actividad'] = time();
 
             // Redirigir al listado principal
             header("Location: list.php");

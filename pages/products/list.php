@@ -2,7 +2,12 @@
   include '../../bd/conexion.php';
   session_start();
   
-
+  require_once '../../bd/validar_permisos.php';
+  require_once '../../bd/control_sesion.php';
+  
+  $esSuperUsuario = $_SESSION['es_super'] ?? false;
+  $permisosSU     = $_SESSION['permisos_su'] ?? [];
+  
   // Si no hay sesión activa, redirigir al login
   if (!isset($_SESSION['usuario'])) {
       header("Location: ../../index.php");
@@ -15,7 +20,7 @@
   //  Verificar si el usuario tiene acceso a Power BI
   $tieneAccesoPBi = false;
   // --- Verificar si el usuario es superusuario ---
-  $esSuperUsuario = isset($_SESSION['usuario']['super_usuario']) && $_SESSION['usuario']['super_usuario'] == 1;
+  //$esSuperUsuario = isset($_SESSION['usuario']['super_usuario']) && $_SESSION['usuario']['super_usuario'] == 1;
 
 
   if (!empty($procesosUsuario)) {
@@ -57,7 +62,7 @@
   // --- Configuración de orden ---
   $columnas = [
       "id_indicador", "proceso", "coordinacion", "codigo", "nombre_indicador",
-      "objetivo", "periodicidad", "fuente_informacion", "meta", "mes", "num", "dem", "resultado"
+      "objetivo", "periodicidad", "fuente_informacion", "meta", "mes", "num", "dem", "resultado", "analisis"
   ];
 
   $orden = (isset($_GET['order']) && in_array($_GET['order'], $columnas)) ? $_GET['order'] : "id_indicador";
@@ -79,7 +84,8 @@
         b.[num],
         b.[dem],
         b.[resultado],
-        b.[id_result]
+        b.[id_result],
+        b.[analisis]
     FROM dbo.indicadores AS a
     INNER JOIN dbo.indicadores_resultado AS b ON a.id_indicador = b.id_idicador
     INNER JOIN dbo.Proceso AS c ON a.idProceso = c.idProceso
@@ -187,11 +193,18 @@
             <div class="card-body">
               
               <!-- desaparecer o aparecer segun usuario superusuario -->
-              <?php if ($esSuperUsuario): ?>
-                <a href="register_indicadores.php" class="btn btn-warning">Registrar Indicadores</a>
-                <a href="register_indicadores_resultado.php" class="btn btn-warning">Registrar Cálculo Indicadores</a>
+              <?php if ($esSuperUsuario && ($permisosSU['p_registrar_indicador'] ?? 0) == 1): ?>
+                  <a href="register_indicadores.php" class="btn btn-warning">
+                      Registrar Indicadores
+                  </a>
               <?php endif; ?>
-             
+
+              <?php if ($esSuperUsuario && ($permisosSU['p_registrar_resultado'] ?? 0) == 1): ?>
+                  <a href="register_indicadores_resultado.php" class="btn btn-warning">
+                      Registrar Cálculo Indicadores
+                  </a>
+              <?php endif; ?>
+
               <!-- <a data-toggle="modal" data-target="#modalPowerBI" class="btn btn-warning">📈 Tablero de Control</a> -->
               <?php if ($tieneAccesoPBi): ?>
                 <a data-toggle="modal" data-target="#modalPowerBI" class="btn btn-warning">📈 Tablero de Control</a>
@@ -233,21 +246,36 @@
                                   <td><?= htmlspecialchars($row[$col]) ?></td>
                                 <?php endforeach; ?>
                                 <td>
-                                  <?php if ($esSuperUsuario): ?>
-                                      <!-- Botones solo visibles para super usuario -->
-                                      <a href="edit.php?id=<?= $row['id_indicador'] ?>" class="btn btn-sm btn-primary">
-                                          <i class='fas fa-edit'></i>
-                                      </a>
-                                      <a href="proceso_eliminar.php?id=<?= $row['id_indicador']; ?>"
-                                          class="btn btn-danger btn-sm" onclick="return confirmarEliminacion(event);">
-                                          <i class='fas fa-trash'></i>
-                                      </a>
-                                  <?php else: ?>
-                                      <!-- Usuario común: sin permisos para editar/eliminar -->
-                                      <button class="btn btn-sm btn-secondary" title="Sin permiso" disabled>
-                                          <i class='fas fa-lock'></i>
-                                      </button>
-                                  <?php endif; ?>
+                                    <?php if ($esSuperUsuario): ?>
+
+                                        <?php if (($permisosSU['p_editar_indicador'] ?? 0) == 1): ?>
+                                            <a href="edit.php?id=<?= $row['id_indicador'] ?>" class="btn btn-sm btn-primary">
+                                                <i class='fas fa-edit'></i>
+                                            </a>
+                                        <?php endif; ?>
+
+                                        <?php if (($permisosSU['p_eliminar_indicador'] ?? 0) == 1): ?>
+                                            <a href="proceso_eliminar.php?id=<?= $row['id_indicador']; ?>"
+                                              class="btn btn-danger btn-sm"
+                                              onclick="return confirmarEliminacion(event);">
+                                                <i class='fas fa-trash'></i>
+                                            </a>
+                                        <?php endif; ?>
+
+                                        <?php if (
+                                            (($permisosSU['p_editar_indicador'] ?? 0) == 0) &&
+                                            (($permisosSU['p_eliminar_indicador'] ?? 0) == 0)
+                                        ): ?>
+                                            <button class="btn btn-sm btn-secondary" title="Sin permiso" disabled>
+                                                <i class='fas fa-lock'></i>
+                                            </button>
+                                        <?php endif; ?>
+
+                                    <?php else: ?>
+                                        <button class="btn btn-sm btn-secondary" title="Sin permiso" disabled>
+                                            <i class='fas fa-lock'></i>
+                                        </button>
+                                    <?php endif; ?>
                                 </td>
                               </tr>
                             <?php endwhile; ?>
