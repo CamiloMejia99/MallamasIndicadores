@@ -3,8 +3,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// define('TIEMPO_INACTIVIDAD', 1800); // 30 minutos
-define('TIEMPO_INACTIVIDAD', 10); // 30 minutos
+define('TIEMPO_INACTIVIDAD', 1800); // 30 minutos
+//define('TIEMPO_INACTIVIDAD', 10); // 30 minutos
 
 // Si no hay usuario logueado, no hacer nada
 if (!isset($_SESSION['usuario'])) {

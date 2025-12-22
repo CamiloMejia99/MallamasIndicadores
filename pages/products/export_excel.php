@@ -89,7 +89,8 @@
         r.mes,
         r.num,
         r.dem,
-        r.resultado
+        r.resultado,
+        r.analisis
     FROM dbo.indicadores i
     LEFT JOIN dbo.indicadores_resultado r ON i.id_indicador = r.id_idicador
     INNER JOIN dbo.Proceso j ON i.idProceso = j.idProceso
@@ -151,7 +152,7 @@
     $headers = [
         "ID Indicador", "Proceso", "Coordinación", "Código",
         "Nombre Indicador", "Objetivo", "Periodicidad",
-        "Fuente Información", "Meta", "ID Resultado", "Mes", "Num", "Dem", "Resultado"
+        "Fuente Información", "Meta", "ID Resultado", "Mes", "Num", "Dem", "Resultado", "Analisis"
     ];
 
     $colLetter = 'A';
@@ -178,7 +179,8 @@
             $row['mes'] ?? '',
             $row['num'] ?? '',
             $row['dem'] ?? '',
-            $row['resultado'] ?? ''
+            $row['resultado'] ?? '',
+            $row['analisis'] ?? ''
         ];
 
         foreach ($values as $v) {
@@ -191,7 +193,7 @@
     // -------------------------------------------------------------
     // 8. Estilos del encabezado
     // -------------------------------------------------------------
-    $sheet->getStyle("A1:N1")->applyFromArray([
+    $sheet->getStyle("A1:O1")->applyFromArray([
         'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
         'fill' => ['fillType' => Fill::FILL_SOLID, 'color' => ['rgb' => '4CAF50']],
         'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
@@ -201,7 +203,7 @@
         $sheet->getColumnDimension($col)->setAutoSize(true);
     }
 
-    $sheet->setAutoFilter("A1:N1");
+    $sheet->setAutoFilter("A1:O1");
     $sheet->freezePane("A2");
 
     // -------------------------------------------------------------

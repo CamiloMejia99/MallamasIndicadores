@@ -15,7 +15,7 @@
 
   // --- Configuración de orden ---
   $columnas = ["id_indicador","proceso","coordinacion","codigo","nombre_indicador",
-              "objetivo","periodicidad","fuente_informacion","meta","num","dem","resultado"];
+              "objetivo","periodicidad","fuente_informacion","meta","num","dem","resultado","analisis"];
   $orden = isset($_GET['order']) && in_array($_GET['order'], $columnas) ? $_GET['order'] : "id_indicador";
   $direccion = (isset($_GET['dir']) && strtoupper($_GET['dir']) === "DESC") ? "DESC" : "ASC";
 
