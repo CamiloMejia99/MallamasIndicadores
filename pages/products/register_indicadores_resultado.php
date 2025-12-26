@@ -17,11 +17,38 @@ include '../../bd/conexion.php';
   //     echo "<script>alert('No tienes permisos para registrar indicadores.'); window.location='list.php';</script>";
   //     exit;
   // }
+
   // Si no hay sesión activa, redirigir al login
   if (!isset($_SESSION['usuario'])) {
       header("Location: ../../index.php");
       exit;
   }
+
+  // Obtener procesos del usuario
+  $procesosUsuario = $_SESSION['procesos'] ?? [];
+
+  if (empty($procesosUsuario)) {
+      echo "<script>alert('No tiene procesos asignados.'); window.location='list.php';</script>";
+      exit;
+  }
+
+  // Crear placeholders (?, ?, ?)
+  $placeholders = implode(',', array_fill(0, count($procesosUsuario), '?'));
+
+  // Consulta filtrada
+  $sqlIndicadores = "
+      SELECT id_indicador, codigo
+      FROM indicadores
+      WHERE idProceso IN ($placeholders)
+      ORDER BY codigo ASC
+  ";
+
+  $stmtIndicadores = sqlsrv_query($conexion, $sqlIndicadores, $procesosUsuario);
+
+  if ($stmtIndicadores === false) {
+      die(print_r(sqlsrv_errors(), true));
+  }
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -114,19 +141,16 @@ include '../../bd/conexion.php';
             <div class="form-group">
               <label for="id_indicador">Indicador</label>
               <select class="form-control" id="id_indicador" name="id_indicador" required>
-                <option value="">Seleccione el codigo del indicador</option>
-                <?php
-                $sql = "SELECT id_indicador, codigo FROM indicadores ORDER BY codigo ASC";
-                $stmt = sqlsrv_query($conexion, $sql);
+                  <option value="">Seleccione el código del indicador</option>
 
-                if ($stmt !== false) {
-                  while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-                    echo "<option value='{$row['id_indicador']}'>{$row['codigo']}</option>";
-                  }
-                  sqlsrv_free_stmt($stmt);
-                }
-                ?>
+                  <?php while ($row = sqlsrv_fetch_array($stmtIndicadores, SQLSRV_FETCH_ASSOC)): ?>
+                      <option value="<?= $row['id_indicador'] ?>">
+                          <?= htmlspecialchars($row['codigo']) ?>
+                      </option>
+                  <?php endwhile; ?>
+
               </select>
+
             </div>
 
             <div class="form-group">
@@ -166,9 +190,13 @@ include '../../bd/conexion.php';
             </div> -->
 
             <div class="form-group">
-              <label for="resultado">ANALISIS</label>
-              <textarea id="analisis" name="analisis" required class="form-control" rows="3"></textarea>
+              <label for="analisis">ANÁLISIS</label>
+              <textarea  id="analisis"  name="analisis"  required  class="form-control" rows="5" placeholder="El análisis debe contener mínimo 200 caracteres"></textarea>
+              <small id="contador" class="form-text text-muted">
+                  0 / 200 caracteres mínimos
+              </small>
             </div>
+
 
 
             <div class="mt-3">
@@ -213,5 +241,26 @@ include '../../bd/conexion.php';
     <script src="../../static/plugins/bs-custom-file-input/bs-custom-file-input.min.js"></script>
     <script src="../../static/js/adminlte.min.js"></script>
     <script src="../../static/js/confirmacion.js"></script>
+    <script>
+      const textarea = document.getElementById('analisis');
+      const contador = document.getElementById('contador');
+      const btnSubmit = document.querySelector('button[type="submit"]');
+
+      textarea.addEventListener('input', () => {
+          const length = textarea.value.trim().length;
+          contador.textContent = `${length} / 200 caracteres mínimos`;
+
+          if (length < 200) {
+              contador.classList.remove('text-success');
+              contador.classList.add('text-danger');
+              btnSubmit.disabled = true;
+          } else {
+              contador.classList.remove('text-danger');
+              contador.classList.add('text-success');
+              btnSubmit.disabled = false;
+          }
+      });
+    </script>
+
   </body>
 </html>

@@ -11,6 +11,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo "<script>alert('ID del indicador no recibido');window.history.back();</script>";
         exit;
     }
+    
+    
 
     $id_indicador       = $_POST['id_indicador'];
     $idProceso          = $_POST['idProceso'] ?? null;
@@ -91,6 +93,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if ($stmtResultado === false) {
                     throw new Exception("Error al actualizar resultados: " . print_r(sqlsrv_errors(), true));
                 }
+
+                //Guardar historial de edicion
+                $usuario_edito = $_SESSION['usuario']['codigoUsuario'];
+                $justificacion = $_POST['justificacion_edicion'] ?? 'No especificada';
+
+                // Insertar en historial
+                $sqlHistorial = "INSERT INTO indicadores_resultado_historial
+                                (id_result, id_idicador, usuario_edito, justificacion_edicion)
+                                VALUES (?, ?, ?, ?)";
+                $paramsHistorial = [$id_result, $id_indicador, $usuario_edito, $justificacion];
+
+                $stmtHistorial = sqlsrv_query($conexion, $sqlHistorial, $paramsHistorial);
+                if ($stmtHistorial === false) {
+                    throw new Exception("Error al registrar historial: " . print_r(sqlsrv_errors(), true));
+                }
+
+                // =======================
+                // VALIDAR ANÁLISIS (200 caracteres)
+                // =======================
+                $analisisArray = $_POST['analisis']; // Array: [id_result => texto]
+                foreach($analisisArray as $id_result => $texto){
+                    $sql = "UPDATE indicadores_resultado SET analisis = ? WHERE id_result = ?";
+                    sqlsrv_query($conexion, $sql, [$texto, $id_result]);
+                }
+
             }
         }
 

@@ -61,6 +61,25 @@ if (!empty($procesosSesion)) {
         }
     }
 }
+
+// Obtener coordinaciones del usuario desde la sesión
+$coordinacionesSesion = $_SESSION['coordinaciones'] ?? [];
+
+// Normalizar a lista de IDs (acepta dos formatos: [1,2,3] o [['idCoordinacion'=>1,'idCoordinacion'=>'X'], ...])
+$coordinacionesAUsar = [];
+if (!empty($coordinacionesSesion)) {
+    // si es array de arrays (con idCoordinacion), extraemos ids
+    if (is_array($coordinacionesSesion) && isset($coordinacionesSesion[0]) && is_array($coordinacionesSesion[0]) && isset($coordinacionesSesion[0]['idCoordinacion'])) {
+        foreach ($coordinacionesSesion as $p) {
+            $coordinacionesAUsar[] = (int)$p['idCoordinacion'];
+        }
+    } else {
+        // si viene ya como array simple de ids
+        foreach ($coordinacionesSesion as $p) {
+            $coordinacionesAUsar[] = (int)$p;
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -183,17 +202,25 @@ if (!empty($procesosSesion)) {
                <select class="form-select" id="idCoordinacion" name="idCoordinacion" aria-label="Default select example" required>
                     <option value="">Seleccione una coordinación</option>
                     <?php
-                    $query = "SELECT idCoordinacion, Coordinacion FROM dbo.Coordinacion";
-                    $result = sqlsrv_query($conexion, $query);
+                          if (!empty($coordinacionesAUsar)) {
+                          // construir placeholders y ejecutar consulta sólo con las coordinaciones del usuario
+                          $placeholders = implode(',', array_fill(0, count($coordinacionesAUsar), '?'));
+                          $sql = "SELECT idCoordinacion, Coordinacion FROM dbo.Coordinacion WHERE idCoordinacion IN ($placeholders) ORDER BY Coordinacion";
+                          $stmt = sqlsrv_query($conexion, $sql, $coordinacionesAUsar);
 
-                    // Guardamos la coordinación actual del indicador
-                    $idCoordinacionActual = $rowIndicador['idCoordinacion'];
-
-                    while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) {
-                        // Si el id actual coincide con el del indicador, marcamos 'selected'
-                        $selected = ($row['idCoordinacion'] == $idCoordinacionActual) ? 'selected' : '';
-                        echo "<option value='{$row['idCoordinacion']}' $selected>{$row['Coordinacion']}</option>";
-                    }
+                          if ($stmt === false) {
+                              echo '<option value="">Error al cargar coordinaciones</option>';
+                          } else {
+                              while ($r = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+                                  $id = (int)$r['idCoordinacion'];
+                                  $nombre = htmlspecialchars($r['Coordinacion'], ENT_QUOTES, 'UTF-8');
+                                  echo "<option value='{$id}'>{$nombre}</option>";
+                              }
+                              sqlsrv_free_stmt($stmt);
+                          }
+                      } else {
+                          echo "<option value=''>⚠️ No tiene coordinaciones asignados</option>";
+                      }
                     ?>
                </select>
             
@@ -250,72 +277,59 @@ if (!empty($procesosSesion)) {
           </div>
 
           <hr>
+
           <h4>Resultados del Indicador</h4>
 
             <?php while ($rowResultado = sqlsrv_fetch_array($stmtResultados, SQLSRV_FETCH_ASSOC)) : ?>
               <div class="border p-3 mb-3">
                   <!-- ID real de indicadores_resultado -->
-                  <input type="hidden" name="id_result[]" 
-                        value="<?= htmlspecialchars($rowResultado['id_result'], ENT_QUOTES, 'UTF-8') ?>">
-
-                  <!-- Llave foránea hacia indicadores -->
-                  <input type="hidden" name="id_idicador[]" 
-                        value="<?= htmlspecialchars($rowResultado['id_idicador'], ENT_QUOTES, 'UTF-8') ?>">
+                  <input type="hidden" name="id_result[]" value="<?= htmlspecialchars($rowResultado['id_result'], ENT_QUOTES, 'UTF-8') ?>">
+                  <input type="hidden" name="id_idicador[]" value="<?= htmlspecialchars($rowResultado['id_idicador'], ENT_QUOTES, 'UTF-8') ?>">
 
                   <div class="row g-2">
                       <div class="col-md-3">
                           <label class="form-label">Mes</label>
-                          <select class="form-select" id="mes" name="mes[]" aria-label="Default select example" required>
+                          <select class="form-select" name="mes[]" required>
                               <option value="">Seleccione un mes</option>
                               <?php
-                              // Guardamos el mes actual del resultado
-                              $mesActual = strtolower(trim($rowResultado['mes'])); // por si viene con mayúsculas o espacios
-
-                              // Array de meses en orden
-                              $meses = [
-                                  "enero", "febrero", "marzo", "abril", "mayo", "junio",
-                                  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-                              ];
-
-                              // Recorremos los meses para crear las opciones
-                              foreach ($meses as $mes) {
+                              $mesActual = strtolower(trim($rowResultado['mes']));
+                              $meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+                              foreach($meses as $mes){
                                   $selected = ($mes == $mesActual) ? 'selected' : '';
                                   echo "<option value='$mes' $selected>" . ucfirst($mes) . "</option>";
                               }
                               ?>
                           </select>
-
                       </div>
                       <div class="col-md-2">
                           <label class="form-label">Num</label>
-                          <input type="number" name="num[]" class="form-control" 
-                                value="<?= htmlspecialchars($rowResultado['num'], ENT_QUOTES, 'UTF-8') ?>">
+                          <input type="number" name="num[]" class="form-control" value="<?= htmlspecialchars($rowResultado['num'], ENT_QUOTES, 'UTF-8') ?>">
                       </div>
                       <div class="col-md-2">
                           <label class="form-label">Dem</label>
-                          <input type="number" name="dem[]" class="form-control" 
-                                value="<?= htmlspecialchars($rowResultado['dem'], ENT_QUOTES, 'UTF-8') ?>">
+                          <input type="number" name="dem[]" class="form-control" value="<?= htmlspecialchars($rowResultado['dem'], ENT_QUOTES, 'UTF-8') ?>">
                       </div>
                       <div class="col-md-3">
                           <label class="form-label">Resultado</label>
-                          <input type="text" name="resultado[]" class="form-control" 
-                                value="<?= htmlspecialchars($rowResultado['resultado'], ENT_QUOTES, 'UTF-8') ?>">
+                          <input type="text" name="resultado[]" class="form-control" value="<?= htmlspecialchars($rowResultado['resultado'], ENT_QUOTES, 'UTF-8') ?>">
+                      </div>
+                  </div>
+
+                  <div class="row g-2 mt-2">
+                      <div class="form-group">
+                          <label for="analisis-<?= $rowResultado['id_result'] ?>">ANÁLISIS</label>
+                          <textarea id="analisis-<?= $rowResultado['id_result'] ?>" 
+                                    name="analisis[<?= $rowResultado['id_result'] ?>]" 
+                                    required class="form-control" rows="5"
+                                    placeholder="El análisis debe contener mínimo 200 caracteres"><?= htmlspecialchars($rowResultado['analisis'] ?? '') ?></textarea>
+                          <small id="contador-<?= $rowResultado['id_result'] ?>" class="form-text text-muted">0 / 200 caracteres mínimos</small>
                       </div>
                   </div>
               </div>
-                
-              <div class="row g-2">
-                <div class="col-md-12">
-                  
-                  <textarea name="analisis[]" class="form-control" rows="3"><?= 
-                      htmlspecialchars($rowResultado['analisis'], ENT_QUOTES, 'UTF-8') 
-                  ?></textarea>
-
-                </div>
-              </div>
             <?php endwhile; ?>
 
-          <button type="submit" class="btn btn-success">Guardar cambios</button>
+
+          <button type="submit" class="btn btn-success" id="btnGuardar">Guardar cambios</button>
           <a href="list.php" class="btn btn-secondary">Cancelar</a>
         </form>
         </div>
@@ -358,5 +372,51 @@ if (!empty($procesosSesion)) {
     <script src="../../static/plugins/bs-custom-file-input/bs-custom-file-input.min.js"></script>
     <script src="../../static/js/adminlte.min.js"></script>
     <script src="../../static/js/confirmacion.js"></script>
+    <script>
+      document.querySelectorAll('textarea[name^="analisis"]').forEach(textarea => {
+          const id_result = textarea.name.match(/\d+/)[0];
+          const contador = document.getElementById('contador-' + id_result);
+          const btnSubmit = document.querySelector('button[type="submit"]');
+
+          const checkLength = () => {
+              const length = textarea.value.trim().length;
+              contador.textContent = `${length} / 200 caracteres mínimos`;
+              if(length < 200){
+                  contador.classList.remove('text-success');
+                  contador.classList.add('text-danger');
+                  btnSubmit.disabled = true;
+              } else {
+                  contador.classList.remove('text-danger');
+                  contador.classList.add('text-success');
+                  btnSubmit.disabled = false;
+              }
+          };
+
+          textarea.addEventListener('input', checkLength);
+          checkLength(); // inicializa contador
+      });
+    </script>
+
+    <script>
+      document.getElementById('btnGuardar').addEventListener('click', function(e){
+          e.preventDefault(); // Detiene el envío automático
+          let justificacion = prompt("Ingrese la justificación de la edición:");
+
+          if (justificacion === null || justificacion.trim() === "") {
+              alert("Debe ingresar una justificación para guardar los cambios.");
+              return; // No se envía el formulario
+          }
+
+          // Creamos un input oculto para enviar la justificación
+          let input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = 'justificacion_edicion';
+          input.value = justificacion;
+          this.closest('form').appendChild(input);
+
+          // Enviar el formulario
+          this.closest('form').submit();
+      });
+    </script>
   </body>
 </html>

@@ -8,7 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $contrasena = trim($_POST['contraseña']);
 
     // Buscar usuario y su estado de super_usuario
-    $sql = "SELECT Cedula, Nombres, Apellidos, codigoUsuario, Password, super_usuario, Direccion, Cargo 
+    $sql = "SELECT Cedula, Nombres, Apellidos, codigoUsuario, Password, super_usuario, Cargo 
             FROM persona 
             WHERE codigoUsuario = ?";
     $params = array($codigo);
@@ -45,6 +45,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit;
             }
 
+            // Buscar las coordianciones asociadas al usuario
+            $sqlCoordinaciones = "SELECT c.idCoordinacion, co.Coordinacion
+                            FROM persona_coordinacion as c
+                            INNER JOIN Coordinacion as co ON c.idCoordinacion = co.idCoordinacion
+                            WHERE c.Cedula = ?";
+            $stmtCoordinaciones = sqlsrv_query($conexion, $sqlCoordinaciones, array($usuario['Cedula']));
+
+            if ($stmtCoordinaciones === false) {
+                die("Error consultando coordinaciones: " . print_r(sqlsrv_errors(), true));
+            }
+
+            $coordinaciones = [];
+            while ($row = sqlsrv_fetch_array($stmtCoordinaciones, SQLSRV_FETCH_ASSOC)) {
+                $coordinaciones[] = $row['idCoordinacion'];
+            }
+
+            if (empty($coordinaciones)) {
+                echo "<script>alert('No tiene coordinaciones asignadas. Contacte al administrador.'); window.location='../../index.php';</script>";
+                exit;
+            }
+
             // Regenerar ID de sesión (seguridad)
             session_regenerate_id(true);
 
@@ -53,12 +74,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 'Cedula' => $usuario['Cedula'] ?? '',
                 'Nombres' => $usuario['Nombres'] ?? '',
                 'Apellidos' => $usuario['Apellidos'] ?? '',
-                'Direccion' => $usuario['Direccion'] ?? '',
                 'Cargo' => $usuario['Cargo'] ?? '',
                 'codigoUsuario' => $usuario['codigoUsuario'] ?? '',
                 'super_usuario' => $usuario['super_usuario'] ?? 0
             ];
             $_SESSION['procesos'] = $procesos;
+            $_SESSION['coordinaciones'] = $coordinaciones;
 
             // Registrar última actividad
             $_SESSION['ultima_actividad'] = time();

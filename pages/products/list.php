@@ -17,12 +17,15 @@
   // --- Obtener procesos asignados ---
   $procesosUsuario = $_SESSION['procesos'] ?? [];
 
+  // --- Obtener coordinaciones asignadas ---
+  $coordinacionesUsuario = $_SESSION['coordinaciones'] ?? []; 
+
   //  Verificar si el usuario tiene acceso a Power BI
   $tieneAccesoPBi = false;
   // --- Verificar si el usuario es superusuario ---
-  //$esSuperUsuario = isset($_SESSION['usuario']['super_usuario']) && $_SESSION['usuario']['super_usuario'] == 1;
+  //$esSuperUsuario = isset($_SESSION['usuario']['super_usuario']) && $_SESSION['usuario']['super_usuario'] == 1;i
 
-
+  // usuario con acceso a PBI
   if (!empty($procesosUsuario)) {
       // Crear placeholders (?, ?, ?, ...)
       $placeholders = implode(',', array_fill(0, count($procesosUsuario), '?'));
@@ -50,8 +53,22 @@
       exit;
   }
 
+  // Si el arreglo viene con subarreglos, extraer solo los idCoordinacion
+  if (isset($coordinacionesUsuario[0]) && is_array($coordinacionesUsuario[0]) && isset($coordinacionesUsuario[0]['idCoordinacion'])) {
+      $coordinacionesUsuario = array_column($coordinacionesUsuario, 'idCoordinacion');
+  }
+
+  // Verificar que tenga coordinaciones
+  if (empty($coordinacionesUsuario)) {
+      echo "<script>alert('No tiene coordinaciones asignaaos. Contacte al administrador.'); window.location='../../index.php';</script>";
+      exit;
+  }
+
   // --- Crear placeholders dinámicos para los procesos ---
   $placeholders = implode(',', array_fill(0, count($procesosUsuario), '?'));
+
+    // --- Crear placeholders dinámicos para los coordinaciones ---
+  $placeholders2 = implode(',', array_fill(0, count($coordinacionesUsuario), '?'));
 
   // --- Configuración de paginación ---
   $registrosPorPagina = 13;
@@ -90,12 +107,13 @@
     INNER JOIN dbo.indicadores_resultado AS b ON a.id_indicador = b.id_idicador
     INNER JOIN dbo.Proceso AS c ON a.idProceso = c.idProceso
     INNER JOIN dbo.Coordinacion AS d ON a.idCoordinacion = d.idCoordinacion
-    WHERE a.idProceso IN ($placeholders)
+    WHERE a.idProceso IN ($placeholders) AND d.idCoordinacion IN ($placeholders2)
     ORDER BY $orden $direccion 
     OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
   // Parámetros: primero los procesos, luego paginación
-  $params = array_merge($procesosUsuario, [$offset, $registrosPorPagina]);
+  $params = array_merge($procesosUsuario, $coordinacionesUsuario, [$offset, $registrosPorPagina]);
+
 
   $stmt = sqlsrv_query($conexion, $sql, $params);
 
@@ -104,14 +122,20 @@
       die(print_r(sqlsrv_errors(), true));
   }
 
+
+
+
   // --- Contar total de registros del usuario ---
   $sqlCount = "SELECT COUNT(*) as total
               FROM dbo.indicadores AS a
               INNER JOIN dbo.indicadores_resultado AS b ON a.id_indicador = b.id_idicador
               INNER JOIN dbo.Proceso AS c ON a.idProceso = c.idProceso
-              WHERE a.idProceso IN ($placeholders)";
+              INNER JOIN dbo.Coordinacion AS d ON a.idCoordinacion = d.idCoordinacion
+              WHERE a.idProceso IN ($placeholders) and d.idCoordinacion IN ($placeholders2)";
 
-  $countStmt = sqlsrv_query($conexion, $sqlCount, $procesosUsuario);
+  $countParams = array_merge($procesosUsuario, $coordinacionesUsuario);
+  $countStmt = sqlsrv_query($conexion, $sqlCount, $countParams);
+  
   $totalRegistros = sqlsrv_fetch_array($countStmt, SQLSRV_FETCH_ASSOC)['total'] ?? 0;
   $totalPaginas = ceil($totalRegistros / $registrosPorPagina);
 ?>
@@ -170,9 +194,8 @@
           if (isset($_SESSION['usuario'])) {
               $nombre = htmlspecialchars($_SESSION['usuario']['Nombres'] ?? '');
               $apellido = htmlspecialchars($_SESSION['usuario']['Apellidos'] ?? '');
-              $direccion = htmlspecialchars($_SESSION['usuario']['Direccion'] ?? '');
               $cargo = htmlspecialchars($_SESSION['usuario']['Cargo'] ?? '');
-              echo "<span style='color:white; margin-left:15px;'> <b>USUARIO:</b>  $nombre $apellido - $direccion - $cargo</span>";
+              echo "<span style='color:white; margin-left:15px;'> <b>USUARIO:</b>  $nombre $apellido - $cargo</span>";
           } else {
               echo "<span style='color:white; font-weight:bold; margin-left:15px;'>USUARIO: </span>";
           }
@@ -205,7 +228,7 @@
                   </a>
               <?php endif; ?>
 
-              <!-- <a data-toggle="modal" data-target="#modalPowerBI" class="btn btn-warning">📈 Tablero de Control</a> -->
+              <!-- <a data-toggle="modal" data-target="#modalPowerBI" class="btn btn-warning"> Tablero de Control</a> -->
               <?php if ($tieneAccesoPBi): ?>
                 <a data-toggle="modal" data-target="#modalPowerBI" class="btn btn-warning">📈 Tablero de Control</a>
               <?php endif; ?>

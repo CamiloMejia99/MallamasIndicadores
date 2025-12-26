@@ -41,6 +41,26 @@ if (!empty($procesosSesion)) {
         }
     }
 }
+
+// Obtener coordinaciones del usuario desde la sesión
+$coordinacionesSesion = $_SESSION['coordinaciones'] ?? [];
+
+// Normalizar a lista de IDs (acepta dos formatos: [1,2,3] o [['idCoordinacion'=>1,'idCoordinacion'=>'X'], ...])
+$coordinacionesAUsar = [];
+if (!empty($coordinacionesSesion)) {
+    // si es array de arrays (con idCoordinacion), extraemos ids
+    if (is_array($coordinacionesSesion) && isset($coordinacionesSesion[0]) && is_array($coordinacionesSesion[0]) && isset($coordinacionesSesion[0]['idCoordinacion'])) {
+        foreach ($coordinacionesSesion as $p) {
+            $coordinacionesAUsar[] = (int)$p['idCoordinacion'];
+        }
+    } else {
+        // si viene ya como array simple de ids
+        foreach ($coordinacionesSesion as $p) {
+            $coordinacionesAUsar[] = (int)$p;
+        }
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -159,12 +179,25 @@ if (!empty($procesosSesion)) {
               <select class="form-select"  id="idCoordinacion" name="idCoordinacion" required>
                 <option>Seleccione una coordinacion</option>
                 <?php
-                include '../../bd/conexion.php';
-                $query = "SELECT idCoordinacion, Coordinacion FROM dbo.Coordinacion ORDER BY Coordinacion ASC ";
-                $result = sqlsrv_query($conexion, $query);
-                while ($row = sqlsrv_fetch_array($result, SQLSRV_FETCH_ASSOC)) {
-                    echo "<option value='{$row['idCoordinacion']}'>{$row['Coordinacion']}</option>";
-                }
+                      if (!empty($coordinacionesAUsar)) {
+                      // construir placeholders y ejecutar consulta sólo con las coordinaciones del usuario
+                      $placeholders = implode(',', array_fill(0, count($coordinacionesAUsar), '?'));
+                      $sql = "SELECT idCoordinacion, Coordinacion FROM dbo.Coordinacion WHERE idCoordinacion IN ($placeholders) ORDER BY Coordinacion";
+                      $stmt = sqlsrv_query($conexion, $sql, $coordinacionesAUsar);
+
+                      if ($stmt === false) {
+                          echo '<option value="">Error al cargar coordinaciones</option>';
+                      } else {
+                          while ($r = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+                              $id = (int)$r['idCoordinacion'];
+                              $nombre = htmlspecialchars($r['Coordinacion'], ENT_QUOTES, 'UTF-8');
+                              echo "<option value='{$id}'>{$nombre}</option>";
+                          }
+                          sqlsrv_free_stmt($stmt);
+                      }
+                  } else {
+                      echo "<option value=''>⚠️ No tiene coordinaciones asignados</option>";
+                  }
                 ?>
               </select>
             </div>

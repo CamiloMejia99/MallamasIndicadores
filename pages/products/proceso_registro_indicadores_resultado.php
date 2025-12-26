@@ -1,7 +1,14 @@
 <?php
-
+session_start();
 include '../../bd/conexion.php';
 
+// Validar sesión
+if (!isset($_SESSION['usuario'])) {
+    header("Location: ../../index.php");
+    exit;
+}
+
+// Asegurar que venga por POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: register_indicadores_resultado.php');
     exit;
@@ -24,6 +31,15 @@ if ($mes === '') {
     echo "<script>alert('Ingrese el mes.');window.history.back();</script>";
     exit;
 }
+// VALIDACIÓN CLAVE: mínimo 200 caracteres
+if (strlen($analisis) < 200) {
+    echo "<script>
+        alert('El análisis debe contener mínimo 200 caracteres.');
+        window.history.back();
+    </script>";
+    exit;
+}
+
 
 // Convertir num y dem a númericos si es posible, sino NULL
 $num = is_numeric($num_raw) ? (float)$num_raw : null;
