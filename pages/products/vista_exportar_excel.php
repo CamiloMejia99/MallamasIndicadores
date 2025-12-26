@@ -90,6 +90,27 @@
       }
   }
 
+  if (!isset($_SESSION['usuario']) || !isset($_SESSION['coordinaciones'])) {
+      echo "<script>alert('Sesión expirada Coo. Inicia sesión nuevamente.'); window.location='../../index.php';</script>";
+      exit;
+  }
+
+  // --- Coordinaciones del usuario ---
+  $coordinacionesUsuario = $_SESSION['coordinaciones'];
+  $coordinacionesLista = [];
+
+  if (!empty($coordinacionesUsuario)) {
+      $placeholders2 = implode(',', array_fill(0, count($coordinacionesUsuario), '?'));
+      $sqlCoordinaciones = "SELECT idCoordinacion, Coordinacion FROM dbo.Coordinacion WHERE idCoordinacion IN ($placeholders2)";
+      $stmtCoordinaciones = sqlsrv_query($conexion, $sqlCoordinaciones, $coordinacionesUsuario);
+
+      if ($stmtCoordinaciones !== false) {
+          while ($row = sqlsrv_fetch_array($stmtCoordinaciones, SQLSRV_FETCH_ASSOC)) {
+              $coordinacionesLista[] = $row;
+          }
+      }
+  }
+
   // --- Filtros por mes ---
   $mesesOrden = [
       "enero" => 1, "febrero" => 2, "marzo" => 3, "abril" => 4,
@@ -100,6 +121,7 @@
   $mesInicio = $_GET['mes_inicio'] ?? '';
   $mesFin = $_GET['mes_fin'] ?? '';
   $procesosSeleccionados = $_GET['procesos'] ?? [];
+  $coordinacionesSeleccionados = $_GET['Coordinaciones'] ?? [];
 ?>
 
 <!DOCTYPE html>
@@ -233,6 +255,25 @@
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <p>No tiene procesos asignados.</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- Coordinaciones -->
+                    <div class="col-md-6">
+                        <label class="form-label"><b>Seleccionar coordinaciones</b></label>
+                        <div class="border rounded p-2" style="max-height:180px; overflow-y:auto;">
+                            <?php if (!empty($coordinacionesLista)): ?>
+                                <?php foreach ($coordinacionesLista as $coordinacion): ?>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="coordinaciones[]" 
+                                            value="<?= $coordinacion['idCoordinacion'] ?>"
+                                            <?= in_array($coordinacion['idCoordinacion'], $coordinacionesSeleccionados) ? 'checked' : '' ?>>
+                                        <label class="form-check-label"><?= htmlspecialchars($coordinacion['Coordinacion']) ?></label>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <p>No tiene coordinaciones asignados.</p>
                             <?php endif; ?>
                         </div>
                     </div>

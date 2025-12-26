@@ -16,8 +16,13 @@
         exit;
     }
 
+    if (!isset($_SESSION['usuario']) || !isset($_SESSION['coordinaciones'])) {
+        echo "<script>alert('Sesión no válida. Inicie sesión nuevamente.'); window.location='../../index.php';</script>";
+        exit;
+    }
+
     // -------------------------------------------------------------
-    // 2. Capturar procesos seleccionados desde el formulario
+    // 2. Capturar procesos y coordinaciones seleccionados desde el formulario
     // -------------------------------------------------------------
     $procesosSeleccionados = isset($_GET['procesos']) ? $_GET['procesos'] : [];
 
@@ -26,7 +31,14 @@
         exit;
     }
 
-    // Asegurar que solo exporte procesos a los que realmente tiene acceso
+    $coordinacionesSeleccionados = isset($_GET['coordinaciones']) ? $_GET['coordinaciones'] : [];
+
+    if (empty($coordinacionesSeleccionados)) {
+        echo "<script>alert('Debe seleccionar al menos una coordinacion.'); window.location='vista_exportar_excel.php';</script>";
+        exit;
+    }
+
+    // Asegurar que solo exporte procesos y coordinaciones a los que realmente tiene acceso
     $procesosPermitidos = $_SESSION['procesos'];
     $procesosValidos = array_values(array_intersect($procesosPermitidos, $procesosSeleccionados));
 
@@ -35,9 +47,22 @@
         exit;
     }
 
-    // Crear placeholders dinámicos para los procesos válidos
+
+    $coordinacionesPermitidos = $_SESSION['coordinaciones'];
+    $coordinacionesValidos = array_values(array_intersect($coordinacionesPermitidos, $coordinacionesSeleccionados));
+
+    if (empty($coordinacionesValidos)) {
+        echo "<script>alert('No tiene permisos para las coordinaciones seleccionadas.'); window.location='vista_exportar_excel.php';</script>";
+        exit;
+    }
+
+    // Crear placeholders dinámicos para los procesos y coordinaciones válidos
     $placeholdersProcesos = implode(',', array_fill(0, count($procesosValidos), '?'));
     $params = $procesosValidos;
+
+    $placeholdersCoordinaciones = implode(',', array_fill(0, count($coordinacionesValidos), '?'));
+    $params = array_merge($params, $coordinacionesValidos);
+
 
     // -------------------------------------------------------------
     // 3. Recibir filtros de mes (texto: enero, febrero, etc.)
@@ -72,7 +97,7 @@
     }
 
     // -------------------------------------------------------------
-    // 5. Consulta SQL filtrando SOLO los procesos seleccionados
+    // 5. Consulta SQL filtrando SOLO los procesos y coordinaciones seleccionados
     // -------------------------------------------------------------
     $sql = "
     SELECT 
@@ -95,7 +120,7 @@
     LEFT JOIN dbo.indicadores_resultado r ON i.id_indicador = r.id_idicador
     INNER JOIN dbo.Proceso j ON i.idProceso = j.idProceso
     INNER JOIN dbo.Coordinacion k ON i.idCoordinacion = k.idCoordinacion
-    WHERE i.idProceso IN ($placeholdersProcesos)
+    WHERE i.idProceso IN ($placeholdersProcesos) and i.idCoordinacion IN ($placeholdersCoordinaciones)
     $filtroMes
     ORDER BY i.id_indicador;
     ";
@@ -199,9 +224,32 @@
         'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
     ]);
 
-    foreach (range('A', 'N') as $col) {
-        $sheet->getColumnDimension($col)->setAutoSize(true);
+    // foreach (range('A', 'N') as $col) {
+    //     $sheet->getColumnDimension($col)->setAutoSize(true);
+    // }
+
+    $anchos = [
+        'A' => 12, // ID Indicador
+        'B' => 20, // Proceso
+        'C' => 22, // Coordinación
+        'D' => 14, // Código
+        'E' => 30, // Nombre Indicador
+        'F' => 35, // Objetivo
+        'G' => 16, // Periodicidad
+        'H' => 30, // Fuente Información
+        'I' => 12, // Meta
+        'J' => 12, // ID Resultado
+        'K' => 14, // Mes
+        'L' => 10, // Num
+        'M' => 10, // Dem
+        'N' => 14, // Resultado
+        'O' => 35  // Análisis
+    ];
+
+    foreach ($anchos as $col => $width) {
+        $sheet->getColumnDimension($col)->setWidth($width);
     }
+
 
     $sheet->setAutoFilter("A1:O1");
     $sheet->freezePane("A2");

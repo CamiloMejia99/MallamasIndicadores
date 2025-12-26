@@ -19,7 +19,7 @@ $id_indicador = isset($_POST['id_indicador']) ? intval($_POST['id_indicador']) :
 $mes          = trim($_POST['mes'] ?? '');
 $num_raw      = trim($_POST['num'] ?? '');
 $dem_raw      = trim($_POST['dem'] ?? '');
-$resultado    = (strval($num_raw  /$dem_raw) . "%");
+$resultado = number_format($num_raw / $dem_raw, 2, '.', ''). '%';
 $analisis     = trim($_POST['analisis'] ?? '');
 
 // Validaciones básicas

@@ -37,7 +37,7 @@ include '../../bd/conexion.php';
 
   // Consulta filtrada
   $sqlIndicadores = "
-      SELECT id_indicador, codigo
+      SELECT id_indicador, codigo, nombre_indicador
       FROM indicadores
       WHERE idProceso IN ($placeholders)
       ORDER BY codigo ASC
@@ -145,7 +145,7 @@ include '../../bd/conexion.php';
 
                   <?php while ($row = sqlsrv_fetch_array($stmtIndicadores, SQLSRV_FETCH_ASSOC)): ?>
                       <option value="<?= $row['id_indicador'] ?>">
-                          <?= htmlspecialchars($row['codigo']) ?>
+                              <?= htmlspecialchars($row['codigo'] . ' - ' . $row['nombre_indicador']) ?>
                       </option>
                   <?php endwhile; ?>
 
